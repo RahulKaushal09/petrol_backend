@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const morgan = require('morgan');
 var cors = require('cors')
 const mongoose = require('mongoose');
 
@@ -10,16 +11,14 @@ require('dotenv').config()
 // set env
 const environment = process.env.NODE_ENV || "development";
 console.log({ environment });
-const dbUrl = "mongodb+srv://rahulkaushal:rahul123@cluster0.bmbvnaz.mongodb.net/?retryWrites=true&w=majority&appName=AtlasApp"
-
-    ;
+const dbUrl = "mongodb+srv://ayush:ayush@cluster0.rajkpzr.mongodb.net/";
 
 // Whitelisdty
 const whitelist = [
     '*'
 ];
 
-app.use(cors());
+app.use(cors())
 app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 
@@ -44,15 +43,31 @@ app.use(function (req, res, next) {
 // -----------------> Routes <-----------------------------------//
 
 const userservicerouter = require('./routes/user.router');
+const orderservicerouter = require('./routes/order.router');
+const coupanservicerouter = require('./routes/coupan.router');
+const driverservicerouter = require('./routes/driver.router')
 
 // -----------------> Routes Setup <---------------------------------//
 app.use('/user', userservicerouter);
+app.use('/order', orderservicerouter);
+app.use('/coupan', coupanservicerouter);
+app.use('/driver', driverservicerouter);
+
+app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
+app.use(bodyParser.json({ limit: "30mb", extended: true }));
+
 
 // --------------------------> Checking for Deployment purposes <----------------------- // 
 app.get('/', (req, res) => {
     res.send('App is running');
 });
 
+
+if (environment === 'development') {
+    app.use(morgan('combined'));
+    // ------------------------> Logger (Morgan) <---------------------------- //
+    console.log('Morgan is enabled...');
+}
 
 const port = process.env.PORT || 3000;
 

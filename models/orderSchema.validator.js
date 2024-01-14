@@ -10,7 +10,13 @@ const validateAddOrderSchema = (orderInfo) => {
     return Joi.validate(orderInfo, orderSchemaModel.addOrderSchemaModel);
 }
 
+const validateUpdateOrderSchema = (orderInfo) => {
+    console.log("checkpoint for validator");
+    return Joi.validate(orderInfo, orderSchemaModel.updateOrderSchemaModel);
+}
+
 module.exports = {
     validateGetOrdersSchema,
-    validateAddOrderSchema
+    validateAddOrderSchema,
+    validateUpdateOrderSchema
 }

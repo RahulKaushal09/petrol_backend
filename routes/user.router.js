@@ -1,12 +1,34 @@
 const express = require('express');
-// const { authToken } = require('../middlewares/authToken');
-const { verifyOtpController, sendOtpController, sendEmailOtp, registerDetails } = require('../controllers/user.controller')
-const { authTokenvalidation } = require('../middlewares/authToken')
-
+const {
+    registerNewUser,
+    addAdressController,
+    getByUsernameController,
+    updateAddress,
+    updatePhoneController,
+    getByPhoneNoController,
+    sendOtpController,
+    verifyOtpController,
+    emailOtpSendController,
+    updateDetailsController,
+    addressDeleteController
+    // emailOtpVerifyController
+} = require('../controllers/user.controller')
+const { authTokenValidator } = require('../middlewares/authTokenValidator');
 const userRouter = express.Router();
 
-userRouter.post('/sendOtp', sendOtpController);//working
+userRouter.get('/getbyusername/:username', authTokenValidator, getByUsernameController,);//working
+userRouter.get('/getbyphoneno/:phoneno', authTokenValidator, getByPhoneNoController,);//working
+userRouter.post('/register', authTokenValidator, registerNewUser);//working
+// userRouter.post('/login', loginController);
+userRouter.post('/updatephone', authTokenValidator, updatePhoneController,);//working
+userRouter.post('/updateAddress', authTokenValidator, updateAddress,);//working
+userRouter.post('/addAddress', authTokenValidator, addAdressController,);//working
+userRouter.delete('/deleteAddress', addressDeleteController);//working
+userRouter.post('/sendotp', sendOtpController);//working
+userRouter.post('/emailSendOtp', emailOtpSendController);//underprogress
+// userRouter.post('/emailVerifyOtp', emailOtpVerifyController);
 userRouter.post('/verifyOtp', verifyOtpController);//working
-userRouter.post('/sendEmailOtp', authTokenvalidation, sendEmailOtp);//working
-userRouter.post('/registerDetails', authTokenvalidation, registerDetails);//working
+userRouter.post('/updatedetails', updateDetailsController,);//working
+// userRouter.post('/middleware', authTokenValidator)// just for debugging
+
 module.exports = userRouter;

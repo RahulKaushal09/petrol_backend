@@ -1,8 +1,19 @@
 const Joi = require('joi');
 const mongoose = require('mongoose');
+const Logger = require('../logger/logger');
+const log = new Logger('Order_SchemaModel');
+
 
 const getAllOrdersSchemaModel = {
     phoneNo: Joi.string().min(10).max(10)
+}
+
+const updateOrderSchemaModel = {
+    phoneNo: Joi.string(),
+    orderID: Joi.string(),
+    status: Joi.string(),
+    assignedTo: Joi.string(),
+    assignTiming: Joi.string(),
 }
 
 const addOrderSchemaModel = {
@@ -47,10 +58,12 @@ const mongoOrderSchema = new mongoose.Schema({
 
 
 
-
+const orderModel = mongoose.model('Order', mongoOrderSchema);
+log.success(`order Schema model created`);
 
 module.exports = {
     getAllOrdersSchemaModel,
     orderModel,
-    addOrderSchemaModel
+    addOrderSchemaModel,
+    updateOrderSchemaModel
 }
