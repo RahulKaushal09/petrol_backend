@@ -10,6 +10,6 @@ const validateGetAllCoupansSchema = (coupanInfo) => {
 }
 
 module.exports = {
-    validateAddCoupanSchema,
-    validateGetAllCoupansSchema
+    validateGetAllCoupansSchema,
+    validateAddCoupanSchema
 }
