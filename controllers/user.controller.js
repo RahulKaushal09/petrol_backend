@@ -51,8 +51,8 @@ async function registerNewUser(req, res) {
         log.error(`Error in registering new user with username ${userObj.username}: ` + error);
     }
 }
-
-const secretKey = "123456789"
+const secretKey = "123456789";
+// const secretKey = "apptesting"
 // client.verify.v2
 //     .services(verifySid)
 //     .verifications.create({ to: "+917879038278", channel: "sms" })
@@ -231,6 +231,7 @@ async function sendOtpController(req, res) {
     try {
         // send otp service
         console.log(client);
+        console.log(loginInfo);
         const otpResponse = await client.verify.v2
             .services(verifySid)
             .verifications.create({
@@ -261,15 +262,19 @@ async function verifyUpdatePhoneController(req, res) {
     console.log(req.header('x-auth-token'));
 
     const otp = loginInfo.OTP;
-    const phoneNo = loginInfo.phoneNo;
-    const oldPhoneNo = loginInfo.oldPhoneNo;
+    const newPhoneNo = loginInfo.phoneNo;
+    // const oldPhoneNo = loginInfo.oldPhoneNo;
     let { error } = userValidator.validateVerifyUpdatePhoneNoSchema(loginInfo);
     if (isNotValidSchema(error, res)) return;
     try {
+        const token = req.header('x-auth-token');
+        const payload_jwt = jwt.verify(token, secretKey);
+        const oldPhoneNo = payload_jwt.phoneNo;
         const verifiedResponse = await client.verify.v2.services(verifySid)
             .verificationChecks
             .create({ to: `${loginInfo.countryCode}${loginInfo.phoneNo}`, code: otp });
 
+        console.log(oldPhoneNo);
         if (verifiedResponse.status === 'approved') {
             log.info(`Successfully verified`);
             // const user = await getUserRole(loginInfo.phoneNo, res);
@@ -284,7 +289,7 @@ async function verifyUpdatePhoneController(req, res) {
             );
             res.header('x-auth-token', jwtToken);
             await UserModel.findOneAndUpdate({ phoneNo: oldPhoneNo },
-                { phoneNo: phoneNo },
+                { phoneNo: newPhoneNo },
                 (err, response) => {
                     if (err || !response) {
                         log.error(`Erro in updating phoen No!`);
@@ -298,6 +303,11 @@ async function verifyUpdatePhoneController(req, res) {
                         })
                     }
                 })
+        }
+        else {
+            res.status(400).send({
+                message: 'Wrong otp entered'
+            })
         }
     } catch (error) {
         log.error(`Error in verifing the otp` + error);
@@ -421,8 +431,11 @@ async function updateAddress(req, res) {
     let { err } = userValidator.validateUpdateAddressSchema(loginInfo, res);
     if (isNotValidSchema(err, res)) return;
     try {
+        const token = req.header('x-auth-token');
+        const payload_jwt = jwt.verify(token, secretKey);
+        const phoneNo = payload_jwt.phoneNo;
         console.log("checkpoint 2");
-        const response = await userDao.updateAddressDao(loginInfo, res);
+        const response = await userDao.updateAddressDao(phoneNo, loginInfo, res);
         // log.info(`Successfully updated the address`)
         return response;
     } catch (error) {
@@ -435,11 +448,17 @@ async function addAdressController(req, res) {
     let { error } = userValidator.validateAddaddressSchema(loginInfo, res);
     if (isNotValidSchema(error, res)) return;
     try {
+        const token = req.header('x-auth-token');
+        const payload_jwt = jwt.verify(token, secretKey);
+        const phoneNo = payload_jwt.phoneNo;
         console.log("checkpoint 1");
-        const result = await userDao.addAddressDao(loginInfo, res);
+        const result = await userDao.addAddressDao(phoneNo, loginInfo, res);
         return result;
     } catch (error) {
         log.error(`Error in adding new address ` + error)
+        res.status(400).send({
+            message: 'Error in adding new address' + error
+        })
     }
 }
 
@@ -448,8 +467,11 @@ async function addressDeleteController(req, res) {
     let { error } = userValidator.validateAddressDeleteSchema(loginInfo, res);
     if (isNotValidSchema(error, res)) return;
     try {
+        const token = req.header('x-auth-token');
+        const payload_jwt = jwt.verify(token, secretKey);
+        const phoneNo = payload_jwt.phoneNo;
         console.log("schema and validation check");
-        const result = await userDao.deleteAddressDao(loginInfo, res);
+        const result = await userDao.deleteAddressDao(phoneNo, loginInfo, res);
         return result;
     } catch (error) {
         log.error(`Error in deleting this address` + error);

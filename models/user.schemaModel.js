@@ -22,15 +22,15 @@ const registerInputUserSchemaModel = {
 }
 
 const deleteAddressSchemaModel = {
-    phoneNo: Joi.string(),
+    // phoneNo: Joi.string(),
     address: {
-        name: Joi.string(),
-        phoneNo: Joi.string(),
-        myself: Joi.boolean(),
-        saveas: Joi.string(),
-        fulladdr: Joi.string(),
-        vehicle: Joi.string(),
-        vnumber: Joi.string().max(4).min(4)
+        name: Joi.string().required().max(50),
+        phoneNo: Joi.string().required().max(10),
+        myself: Joi.boolean().required(),
+        saveas: Joi.string().required().max(50),
+        fulladdr: Joi.string().required().max(100),
+        vehicle: Joi.string().required().max(50),
+        vnumber: Joi.string().max(4).min(4).required()
     }
 }
 
@@ -90,33 +90,34 @@ const updateNameSchemaModel = {
 }
 
 const updatePhoneSchemaModel = {
-    phoneNo: Joi.string().required().max(10).min(10),
+    // phoneNo: Joi.string().required().max(10).min(10),
+    countryCode: Joi.string().required().max(5),
     newPhoneNo: Joi.string().required().max(10).min(10)
 }
 
 const updateAddressSchemaModel = {
-    phoneNo: Joi.string().required().max(10).min(10),
+    _id: Joi.string().required().max(50),
     address: {
-        name: Joi.string(),
-        phoneNo: Joi.string(),
-        myself: Joi.boolean(),
-        saveas: Joi.string(),
-        fulladdr: Joi.string(),
-        vehicle: Joi.string(),
-        vnumber: Joi.string().max(4).min(4)
+        name: Joi.string().required().max(50),
+        phoneNo: Joi.string().required().max(10),
+        myself: Joi.boolean().required(),
+        saveas: Joi.string().required().max(50),
+        fulladdr: Joi.string().required().max(100),
+        vehicle: Joi.string().required().max(50),
+        vnumber: Joi.string().max(4).min(4).required()
     }
 }
 
 const addAddressSchemaModel = {
-    phoneNo: Joi.string().required().max(10).min(10),
+    // phoneNo: Joi.string().required().max(10).min(10),
     address: {
-        name: Joi.string(),
-        phoneNo: Joi.string(),
-        myself: Joi.boolean(),
-        saveas: Joi.string(),
-        fulladdr: Joi.string(),
-        vehicle: Joi.string(),
-        vnumber: Joi.string().max(4).min(4)
+        name: Joi.string().required().max(50),
+        phoneNo: Joi.string().required().max(10),
+        myself: Joi.boolean().required(),
+        saveas: Joi.string().required().max(50),
+        fulladdr: Joi.string().required().max(100),
+        vehicle: Joi.string().required().max(50),
+        vnumber: Joi.string().max(4).min(4).required()
     }
 }
 
@@ -137,8 +138,8 @@ const verifyOtpSchemaModel = {
 
 const verifyUpdatePhoneNoSchemaModel = {
     phoneNo: Joi.string().required().min(10).max(10),
-    oldPhoneNo: Joi.string().required(),
-    countryCode: Joi.string().required(),
+    // oldPhoneNo: Joi.string().required().min(10).max(10),
+    countryCode: Joi.string().required().max(5),
     OTP: Joi.string().required().min(6).max(6),
 }
 
