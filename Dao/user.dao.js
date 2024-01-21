@@ -123,11 +123,13 @@ async function getByPhoneNo(loginInfo, res) {
                 message: 'No user with this ' + phoneNo + 'found'
             })
         }
-        log.info(`Found a user with phone No ${phoneNo}`);
-        return res.status(200).send({
-            result: response,
-            message: `FOund a user with phoneno ${phoneNo}`
-        })
+        else {
+            log.info(`Found a user with phone No ${phoneNo}`);
+            return res.status(200).send({
+                result: response,
+                message: `FOund a user with phoneno ${phoneNo}`
+            })
+        }
     })
 }
 
@@ -153,11 +155,14 @@ async function updateAddressDao(phoneNo, loginInfo, res) {
                 phoneNo: phoneNo
             })
         }
-        log.info(`Found and successfully updated the phoneNo for the user ${phoneNo} from prev address ${response.address} to new address ${address}`);
-        return res.status(200).send({
-            message: `Successfully the address from ${response.address} to new address ${address}`,
-            result: response
-        })
+        else {
+
+            log.info(`Found and successfully updated the phoneNo for the user ${phoneNo} from prev address ${response.address} to new address ${address}`);
+            return res.status(200).send({
+                message: `Successfully the address from ${response.address} to new address ${address}`,
+                result: response
+            })
+        }
     })
 }
 
@@ -180,11 +185,14 @@ async function addAddressDao(phoneNo, loginInfo, res) {
                         message: 'Error in adding new address'
                     })
                 }
-                log.info(`Sucessfully added new addres in the addres array to phoneNo ${phoneNo}`);
-                // console.log(res);
-                return res.status(200).send({
-                    message: 'Successfully added new address',
-                })
+                else {
+                    log.info(`Sucessfully added new addres in the addres array to phoneNo ${phoneNo}`);
+                    // console.log(res);
+                    return res.status(200).send({
+                        message: 'Successfully added new address',
+                    })
+
+                }
             })
         return result;
     } catch (error) {
@@ -287,10 +295,13 @@ async function updateUsernameDao(loginInfo, res) {
                     message: 'Error while updating the name'
                 })
             }
-            log.info(`Successfully updated the name`);
-            return res.status(200).send({
-                message: 'Successfully updated the name'
-            })
+            else {
+
+                log.info(`Successfully updated the name`);
+                return res.status(200).send({
+                    message: 'Successfully updated the name'
+                })
+            }
         }
     )
     return result;

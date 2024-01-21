@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 
 
 async function addOrderController(req, res) {
-    console.log("abcc");
+
     const orderInfo = req.body;
     let { error } = orderValidator.validateAddOrderSchema(orderInfo, res);
     // console.log("check");
@@ -16,11 +16,17 @@ async function addOrderController(req, res) {
     // console.log("check2");
     try {
         // console.log("check3");
-        const response = await orderDao.addOrderDao(orderInfo, res);
+        const token = req.header('x-auth-token');
+        const payload_jwt = jwt.verify(token, secretKey);
+        const phoneNo = payload_jwt.phoneNo;
+        const response = await orderDao.addOrderDao(phoneNo, orderInfo, res);
         return response;
         // res.status(200).send({ message: "Working" })
     } catch (error) {
         log.error(`Error in adding new order for phoneNO ${orderInfo.phoneNo}` + error)
+        return res.status(400).send({
+            message: 'error while adding order ' + error
+        })
     }
 }
 

@@ -404,7 +404,7 @@ async function verifyOtpController(req, res) {
 }
 
 async function getByPhoneNoController(req, res) {
-    const loginInfo = req.params.phoneno;
+    const loginInfo = req.params.phoneNo;
     console.log(loginInfo);
     try {
         console.log("checkpoint2");

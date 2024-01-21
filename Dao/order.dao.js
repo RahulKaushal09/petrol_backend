@@ -11,11 +11,19 @@ async function getAllOrdersDao(orderInfo, res) {
     console.log({ phoneNo });
     await orderModel.findOne({ phoneNo: phoneNo }, (err, response) => {
         console.log("checkpoint3");
-        if (err || !response) {
+        if (err) {
             log.error(`Error in finding phoneNo ${phoneNo}` + err);
             return res.status(404).send({
                 phoneNo: phoneNo,
-                message: 'No order with this' + phoneNo + 'found'
+                message: 'error in finding phone No ' + phoneNo
+            })
+        }
+        else if (!response) {
+
+            log.error(`no response in phoneNo ${phoneNo}`);
+            return res.status(200).send({
+                phoneNo: phoneNo,
+                message: 'No order with this ' + phoneNo + ' number found'
             })
         }
         else {
@@ -105,13 +113,13 @@ async function updateOrderDetailsDao(orderInfo, res) {
         })
 }
 
-async function phoneExists(orderInfo) {
-    return await UserModel.findOne({ phoneNo: orderInfo.phoneNo });
+async function phoneExists(phoneNo) {
+    return await UserModel.findOne({ phoneNo: phoneNo });
 }
 
-async function addOrderDao(orderInfo, res) {
+async function addOrderDao(phone, orderInfo, res) {
     // console.log({ orderInfo });
-    const payload = await phoneExists(orderInfo);
+    const payload = await phoneExists(phone);
     if (!payload) {
         return res.status(404).send({
             message: 'Cant find the user with phoneNo' + orderInfo.phoneNo
