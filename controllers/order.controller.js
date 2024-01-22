@@ -5,7 +5,7 @@ const log = new Logger('Order_Controller');
 const orderDao = require('../Dao/order.dao')
 // const { UserModel } = require('../models/user.schemaModel')
 const jwt = require('jsonwebtoken');
-
+const secretKey = "123456789";
 
 async function addOrderController(req, res) {
 

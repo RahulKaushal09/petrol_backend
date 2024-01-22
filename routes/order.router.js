@@ -14,7 +14,7 @@ const orderRouter = express.Router();
 
 // user
 orderRouter.get('/getOrders/:phoneNo', authTokenValidator, getAllOrdersController,);//working checked
-// orderRouter.post('/addOrder', authTokenValidator, addOrderController);//working checked
+orderRouter.post('/addOrder', authTokenValidator, addOrderController);//working checked
 // // getBy Id
 // // orderRouter.get('/getOrderById/:_adrId', getByIdController)
 

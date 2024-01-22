@@ -30,13 +30,13 @@ const addOrderSchemaModel = {
         emergency: Joi.boolean(),
         Date: Joi.date(),
         preferredTiming: Joi.string().required(),
-        CoupanId: Joi.string().required(),
+        CoupanId: Joi.string(),
         addressId: Joi.string().required(),
         status: Joi.string().required(),
         assignedTo: Joi.string().required(),
         assignTiming: Joi.string().required(),
         // total amount after coupan
-        totalAmount: Joi.string().required()
+        // totalAmount: Joi.string().required()
     }
 };
 
