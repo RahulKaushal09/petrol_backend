@@ -4,10 +4,10 @@ const Logger = require('../logger/logger');
 const log = new Logger('Driver_SchemaModel');
 
 const addDriversSchemaModel = {
-    username: Joi.string(),
-    password: Joi.string(),
-    name: Joi.string(),
-    phoneNo: Joi.string(),
+    username: Joi.string().required().max(50),
+    password: Joi.string().required().max(50),
+    name: Joi.string().required().max(50),
+    phoneNo: Joi.string().required().max(10),
     // assignedOrders: {
     //     _orderId: Joi.string(),
     // }
@@ -23,13 +23,13 @@ const updateDriverSchemaModel = {
 }
 
 const adminLoginSchemaModel = {
-    username: Joi.string(),
-    password: Joi.string()
+    username: Joi.string().required().max(50),
+    password: Joi.string().required().max(50)
 }
 
 const driverLoginSchemaModel = {
-    username: Joi.string(),
-    password: Joi.string()
+    username: Joi.string().required().max(50),
+    password: Joi.string().required().max(50)
 }
 
 const mongoDriverSchema = new mongoose.Schema({

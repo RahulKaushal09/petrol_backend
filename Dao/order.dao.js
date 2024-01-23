@@ -4,6 +4,7 @@ const { orderModel } = require('../models/order.schemaModel')
 const { UserModel } = require('../models/user.schemaModel');
 const { CoupanModel } = require('../models/coupan.schemaModel');
 const { errorMonitor } = require('nodemailer/lib/xoauth2');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const secretKey = "12345"
 
@@ -46,6 +47,8 @@ async function getOrdersByIdDao(orderInfo, res) {
 
 async function updateOrderStatusDao(orderInfo, res) {
     const status = orderInfo.status;
+    const phoneNo = orderInfo.phoneNo;
+    const orderID = orderInfo.orderID;
     const result = await orderModel.findOneAndUpdate(
         {
             phoneNo: phoneNo,
@@ -59,7 +62,7 @@ async function updateOrderStatusDao(orderInfo, res) {
         { new: true, upsert: true },
         (err, response) => {
             if (err || !response) {
-                log.error(`Error in dao querry` + err);
+                log.error('cannot find a maatch for phone no and order id');
                 return res.status(500).send({
                     message: 'Error in updating order status'
                 })
@@ -211,6 +214,7 @@ async function addOrderDao(phone, orderInfo, res) {
                                     "totalAmount": totalAmount
                                 }
                             });
+                            // payment
                             const result = await newOrder.save((err, result) => {
                                 if (err) {
                                     log.error(`Error in adding first order for phoneNo ${phone}: ` + err);

@@ -17,9 +17,9 @@ const updateOrderSchemaModel = {
 }
 
 const updateOrderStatusSchemaModel = {
-    phoneNo: Joi.string(),
-    orderID: Joi.string(),
-    status: Joi.string()
+    phoneNo: Joi.string().required().max(10),
+    orderID: Joi.string().required().max(50),
+    status: Joi.string().required().max(15)
 }
 
 const addOrderSchemaModel = {

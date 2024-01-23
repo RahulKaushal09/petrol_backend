@@ -99,13 +99,13 @@ async function updateAssignedOrdersController(req, res) {
 }
 
 async function addAdmin(req, res) {
-    const driverInfo = {
+    const adminInfo = {
         name: 'Admin',
         username: 'admin',
         password: 'admin'
     };
     // const driverInfo=req.body;
-    const result = await driverDao.addAdminDao(driverInfo, res);
+    const result = await driverDao.addAdminDao(adminInfo, res);
     return result;
 }
 

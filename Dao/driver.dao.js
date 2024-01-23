@@ -11,7 +11,7 @@ async function adminLoginDao(driverInfo, res) {
     const username = driverInfo.username;
     const password = driverInfo.password;
 
-    const result = await DriverModel.findOne({ username: username },
+    const result = await AdminModel.findOne({ username: username },
         async (err, response) => {
             if (err || !response) {
                 log.error(`error in finding the username` + err);
@@ -19,25 +19,28 @@ async function adminLoginDao(driverInfo, res) {
                     message: 'error in logging in!'
                 })
             }
-            const isPasswordCorrect = await bcrypt.compare(password, response.password);
-            if (!isPasswordCorrect) {
-                log.info(`Incorrect password`);
-                return res.status(400).send({
-                    message: 'incorrect password'
+            else {
+
+                const isPasswordCorrect = await bcrypt.compare(password, response.password);
+                if (!isPasswordCorrect) {
+                    log.info(`Incorrect password`);
+                    return res.status(400).send({
+                        message: 'incorrect password'
+                    })
+                }
+                const jwtToken = jwt.sign(
+                    {
+                        "username": username,
+                        "role": "admin"
+                    },
+                    secretKey,
+                    // { expiresIn: "90d" }
+                );
+                return res.header('x-auth-token', jwtToken).status(200).send({
+                    message: 'Logged In successfully!',
+                    result: response
                 })
             }
-            const jwtToken = jwt.sign(
-                {
-                    "username": username,
-                    "password": password
-                },
-                secretKey,
-                // { expiresIn: "90d" }
-            );
-            return res.header('x-auth-token', jwtToken).status(200).send({
-                message: 'Logged In successfully!',
-                result: response
-            })
         })
     return result;
 }
@@ -55,25 +58,27 @@ async function driverLoginDao(driverInfo, res) {
             if (err || !response) {
                 flag = true;
             }
-            const temp = await bcrypt.compare(password, response.password);
-            if (!temp) {
-                return res.status(403).send({
-                    message: 'validation error with token'
-                })
-            }
             else {
-                const jwtToken = jwt.sign(
-                    {
-                        "username": username,
-                        "password": password
-                    },
-                    secretKey,
-                    // { expiresIn: "90d" }
-                );
-                return res.header('x-auth-token', jwtToken).status(200).send({
-                    message: 'Logged In as admin successfully!',
-                    result: response
-                })
+                const temp = await bcrypt.compare(password, response.password);
+                if (!temp) {
+                    return res.status(403).send({
+                        message: 'validation error with token'
+                    })
+                }
+                else {
+                    const jwtToken = jwt.sign(
+                        {
+                            "username": username,
+                            "role": "admin"
+                        },
+                        secretKey,
+                        // { expiresIn: "90d" }
+                    );
+                    return res.header('x-auth-token', jwtToken).status(200).send({
+                        message: 'Logged In as admin successfully!',
+                        result: response
+                    })
+                }
             }
         })
     if (flag) {
@@ -95,7 +100,7 @@ async function driverLoginDao(driverInfo, res) {
                 const jwtToken = jwt.sign(
                     {
                         "username": username,
-                        "password": password
+                        "role": "driver"
                     },
                     secretKey,
                     // { expiresIn: "90d" }
@@ -244,68 +249,85 @@ async function getordersDao(driverInfo, res) {
 }
 
 
-async function addAdminDao(driverInfo, res) {
-    console.log({ driverInfo });
-    const username = driverInfo.username;
-    const password = driverInfo.password;
-    const name = driverInfo.name;
+async function addAdminDao(adminInfo, res) {
+    try {
 
-    let newAdmin = new AdminModel({
-        name: name,
-        username: username,
-        password: password,
-        phoneNo: '1234567890',
-        role: 'ADMIN'
-    })
-    newAdmin.password = await bcrypt.hash(password, 12);
-    await newAdmin.save((err, response) => {
-        if (err || !response) {
-            return res.status(400).send('error in adding Admin');
-        }
-        return res.status(200).send('Admin Created')
-    })
+        console.log({ adminInfo });
+        const username = adminInfo.username;
+        const password = adminInfo.password;
+        const name = adminInfo.name;
+
+        let newAdmin = new AdminModel({
+            name: name,
+            username: username,
+            password: password,
+            phoneNo: '1234567890',
+        })
+        newAdmin.password = await bcrypt.hash(password, 12);
+        await newAdmin.save((err, response) => {
+            if (err || !response) {
+                return res.status(400).send('error in adding Admin');
+            }
+            else {
+
+                return res.status(200).send('Admin Created')
+            }
+        })
+    } catch (error) {
+        log.error('error while adding admin')
+        return res.status(400).send({
+            message: 'error while adding admin' + error,
+        })
+    }
 }
 
 async function addDriversDao(driverInfo, res) {
+    try {
 
-    console.log({ driverInfo }, " dao layer entered");
-    const phoneNo = driverInfo.phoneNo;
+        console.log({ driverInfo }, " dao layer entered");
+        const phoneNo = driverInfo.phoneNo;
 
-    await DriverModel.findOne({ phoneNo: phoneNo }, async (err, response) => {
-        if (err || !response) {
-            let newDriver = new DriverModel({
-                name: driverInfo.name,
-                username: driverInfo.username,
-                password: driverInfo.password,
-                phoneNo: phoneNo,
-                // assignedOrders: [{ _orderId: driverInfo.assignedOrders._orderId, }],
-            })
-            newDriver.password = await bcrypt.hash(driverInfo.password, 12);
-            console.log({ newDriver });
-            async function registerNewUser() {
-                const result = await newDriver.save((err, response) => {
-                    if (err || !response) {
-                        log.error(`Error in saving mongoose querry` + err);
-                        return res.status(500).send({
-                            message: 'error in saving driver info in db'
-                        })
-                    }
-                    log.info(`Successfully saved the driver info in the db`);
-                    return res.send({
-                        message: 'Successfully saved the data in db'
-                    })
+        await DriverModel.findOne({ phoneNo: phoneNo }, async (err, response) => {
+            if (err || !response) {
+                let newDriver = new DriverModel({
+                    name: driverInfo.name,
+                    username: driverInfo.username,
+                    password: driverInfo.password,
+                    phoneNo: phoneNo,
+                    // assignedOrders: [{ _orderId: driverInfo.assignedOrders._orderId, }],
                 })
-                return result;
+                newDriver.password = await bcrypt.hash(driverInfo.password, 12);
+                console.log({ newDriver });
+                async function registerNewUser() {
+                    const result = await newDriver.save((err, response) => {
+                        if (err || !response) {
+                            log.error(`Error in saving mongoose querry` + err);
+                            return res.status(500).send({
+                                message: 'error in saving driver info in db'
+                            })
+                        }
+                        log.info(`Successfully saved the driver info in the db`);
+                        return res.send({
+                            message: 'Successfully saved the data in db'
+                        })
+                    })
+                    return result;
+                }
+                registerNewUser();
             }
-            registerNewUser();
-        }
-        else {
-            return res.status(409).send({
-                message: 'driver already exists with this phoneNo',
-                result: response
-            })
-        }
-    })
+            else {
+                return res.status(409).send({
+                    message: 'driver already exists with this phoneNo',
+                    result: response
+                })
+            }
+        })
+    } catch (error) {
+        log.error('error while adding new driver')
+        return res.status(400).send({
+            message: 'error while adding new driver' + error,
+        })
+    }
 }
 
 module.exports = {
