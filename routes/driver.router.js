@@ -21,8 +21,8 @@ driverRouter.post('/addDrivers', adminTokenValidator, addDriversController,);//f
 // driverRouter.post('/updateAssignedOrders', adminTokenValidator, updateAssignedOrdersController);//working
 
 
-// driverRouter.post('/testing', testingController)//working
-// driverRouter.get('/getOrders/:phoneNo', driverTokenValidator, getOrdersController);// only assigned orders working
+// driverRouter.post('/testing', testingController) //working
+// driverRouter.get('/getOrders/:phoneNo', driverTokenValidator, getOrdersController); // only assigned orders working
 driverRouter.post('/login', driverLoginController);//working
 // driverRouter.get('/getAllorders', adminTokenValidator, getAllOrdersController);// working
 // multiple queries for completed order

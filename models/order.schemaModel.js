@@ -63,13 +63,34 @@ const mongoOrderSchema = new mongoose.Schema({
 });
 
 
+const slotSchema = new mongoose.Schema({
+    slot: Number,
+    time: String,
+    petrol: Number,
+    diesel: Number
+});
+
+// Define the schema for a day
+const daySchema = new mongoose.Schema({
+    day: String,
+    slots: [slotSchema],
+    date: Date
+});
+
+// Define the main schedule schema
+const scheduleSchema = new mongoose.Schema({
+    schedule: [daySchema]
+});
 
 
 const orderModel = mongoose.model('Order', mongoOrderSchema);
+const ScheduleModel = mongoose.model('Schedule', scheduleSchema);
+
 log.success(`order Schema model created`);
 
 module.exports = {
     getAllOrdersSchemaModel,
+    ScheduleModel,
     orderModel,
     addOrderSchemaModel,
     updateOrderSchemaModel,

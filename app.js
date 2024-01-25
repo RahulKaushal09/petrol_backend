@@ -3,7 +3,7 @@ const app = express();
 const morgan = require('morgan');
 var cors = require('cors')
 const mongoose = require('mongoose');
-
+const { updatedScheduleDao, createOrUpdateScheduleDao } = require('./Dao/order.dao')
 require('dotenv').config()
 
 
@@ -77,7 +77,15 @@ app.listen(port, () => {
     console.log(`Application running in ${environment} environment, listening to port ${port}....`);
     try {
         mongoose.connect(dbUrl, { useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false, useUnifiedTopology: true })
-            .then(console.log('connected to mongo database....'));
+            .then(() => {
+                console.log('Connected to MongoDB');
+                createOrUpdateScheduleDao();
+                // Schedule daily execution of the updatedSchedule function
+                setInterval(() => {
+                    updatedScheduleDao();
+                }, 24 * 60 * 60 * 1000);
+            })
+            .catch(error => console.error('Error connecting to MongoDB:', error));
     } catch (error) {
         console.error('unable to connect, please check your connection....' + error)
     }
