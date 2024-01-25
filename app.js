@@ -3,6 +3,8 @@ const app = express();
 const morgan = require('morgan');
 var cors = require('cors')
 const mongoose = require('mongoose');
+const cron = require('node-cron');
+
 const { updatedScheduleDao, createOrUpdateScheduleDao } = require('./Dao/order.dao')
 require('dotenv').config()
 
@@ -80,10 +82,11 @@ app.listen(port, () => {
             .then(() => {
                 console.log('Connected to MongoDB');
                 createOrUpdateScheduleDao();
-                // Schedule daily execution of the updatedSchedule function
-                setInterval(() => {
+
+                // Schedule the updatedScheduleDao function to run every day at 12 AM
+                cron.schedule('0 0 * * *', () => {
                     updatedScheduleDao();
-                }, 24 * 60 * 60 * 1000);
+                });
             })
             .catch(error => console.error('Error connecting to MongoDB:', error));
     } catch (error) {
