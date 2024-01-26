@@ -31,7 +31,8 @@ userRouter.delete('/deleteAddress', authTokenValidator, checkSystemStatusMiddlew
 userRouter.post('/sendotp', checkSystemStatusMiddleware, sendOtpController);//working
 userRouter.post('/verifyOtp', checkSystemStatusMiddleware, verifyOtpController);//working
 userRouter.post('/emailSendOtp', checkSystemStatusMiddleware, sendEmailOtp);//working
-userRouter.post('/emailVerifyOtp', checkSystemStatusMiddleware, authTokenValidator, checkSystemStatusMiddleware, verifyEmailOtp);//working
+userRouter.post('/emailVerifyOtp', authTokenValidator, checkSystemStatusMiddleware, verifyEmailOtp);//working
+userRouter.post('/emailVerifyOtp', authTokenValidator, checkSystemStatusMiddleware, verifyEmailOtp);//working
 // userRouter.post('/updateusername', authTokenValidator, updateUsernameController,);// working
 // userRouter.post('/updatename', authTokenValidator, updateNameController,);// working
 // userRouter.post('/middleware', authTokenValidator)// just for debugging
