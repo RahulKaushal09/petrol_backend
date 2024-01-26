@@ -28,10 +28,10 @@ userRouter.post('/verifyUpdatePhone', authTokenValidator, checkSystemStatusMiddl
 userRouter.post('/updateAddress', authTokenValidator, checkSystemStatusMiddleware, updateAddress,);//working
 userRouter.post('/addAddress', authTokenValidator, checkSystemStatusMiddleware, addAdressController,);//working
 userRouter.delete('/deleteAddress', authTokenValidator, checkSystemStatusMiddleware, addressDeleteController);//working
-userRouter.post('/sendotp', sendOtpController);//working
-userRouter.post('/verifyOtp', verifyOtpController);//working
-userRouter.post('/emailSendOtp', sendEmailOtp);//working
-userRouter.post('/emailVerifyOtp', authTokenValidator, checkSystemStatusMiddleware, verifyEmailOtp);//working
+userRouter.post('/sendotp', checkSystemStatusMiddleware, sendOtpController);//working
+userRouter.post('/verifyOtp', checkSystemStatusMiddleware, verifyOtpController);//working
+userRouter.post('/emailSendOtp', checkSystemStatusMiddleware, sendEmailOtp);//working
+userRouter.post('/emailVerifyOtp', checkSystemStatusMiddleware, authTokenValidator, checkSystemStatusMiddleware, verifyEmailOtp);//working
 // userRouter.post('/updateusername', authTokenValidator, updateUsernameController,);// working
 // userRouter.post('/updatename', authTokenValidator, updateNameController,);// working
 // userRouter.post('/middleware', authTokenValidator)// just for debugging

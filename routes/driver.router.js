@@ -24,8 +24,8 @@ driverRouter.post('/addDrivers', adminTokenValidator, addDriversController,);//f
 // driverRouter.post('/updateAssignedOrders', adminTokenValidator, updateAssignedOrdersController);//working
 
 // driverRouter.get('/getOrders/:phoneNo', driverTokenValidator, getOrdersController); // only assigned orders working
-driverRouter.post('/login', driverLoginController);//working
-driverRouter.get('/getAllorders', driverTokenValidator, getAllOrdersController);// working
+driverRouter.post('/login', checkSystemStatusMiddleware, driverLoginController);//working
+driverRouter.get('/getAllorders', driverTokenValidator, checkSystemStatusMiddleware, getAllOrdersController);// working
 // multiple queries for completed order
 // petrol only
 // driverRouter.get('/getOnlyPetrol/:phoneNo', driverTokenValidator, getOnlyPetrolController)//working perfectly
