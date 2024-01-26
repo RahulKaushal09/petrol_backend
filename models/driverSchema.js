@@ -26,6 +26,9 @@ const adminLoginSchemaModel = {
     username: Joi.string().required().max(50),
     password: Joi.string().required().max(50)
 }
+const SystemWorking = {
+    status: Joi.string().required().max(50),
+}
 
 const driverLoginSchemaModel = {
     username: Joi.string().required().max(50),
@@ -45,6 +48,9 @@ const mongoDriverSchema = new mongoose.Schema({
     // ],
     role: String
 });
+const mongoSystemStatus = new mongoose.Schema({
+    status: String
+});
 
 const mongoAdminSchema = new mongoose.Schema({
     name: String,
@@ -56,6 +62,7 @@ const mongoAdminSchema = new mongoose.Schema({
 
 const DriverModel = mongoose.model('Driver', mongoDriverSchema);
 const AdminModel = mongoose.model('Admin', mongoAdminSchema);
+const SystemStatusModel = mongoose.model('System', mongoSystemStatus);
 
 log.warn(`Driver Schema model created`);
 
@@ -67,5 +74,7 @@ module.exports = {
     getOrdersSchemaModel,
     adminLoginSchemaModel,
     updateDriverSchemaModel,
-    AdminModel
+    AdminModel,
+    SystemStatusModel,
+    SystemWorking
 }

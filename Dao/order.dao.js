@@ -142,7 +142,7 @@ async function addOrderDao(phone, orderInfo, res) {
         let foundDate = false;
         let availableSlot;
         for (let i = 0; i < 4; i++) {
-            // console.log(schedules);
+            console.log(schedules[0].schedule[i].date.toISOString().split('T')[0]);
             if (schedules[0].schedule[i].date.toISOString().split('T')[0] == orderInfo.order.Date) {
                 // console.log("ok");
                 log.info("found the date available in the mongoDB ")
@@ -415,7 +415,6 @@ async function addOrderDao(phone, orderInfo, res) {
 
 
 
-
 async function updatedScheduleDao() {
     try {
         // Fetch the existing data from MongoDB
@@ -445,15 +444,15 @@ async function updatedScheduleDao() {
                 // For the last day, add a new entry for the upcoming day
                 existingData[0].schedule[i].date = formattedDate;
                 existingData[0].schedule[i].slots.forEach(slot => {
-                    slot.petrol = 0; // Reset petrol for the new day
+                    slot.petrol = 0; // Reset petrol for the new day 
                     slot.diesel = 0; // Reset diesel for the new day
                 });
             }
         }
 
         // Save the updated data back to MongoDB
-        await ScheduleModel.deleteMany({}); // Clear existing data
-        await ScheduleModel.create(existingData);
+        const updatedSchedule = existingData[0];
+        await ScheduleModel.findOneAndUpdate({}, updatedSchedule, { upsert: true });
         console.log('Data updated and saved to MongoDB.');
     } catch (error) {
         console.error('Error updating schedule:', error);

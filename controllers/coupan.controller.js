@@ -3,6 +3,23 @@ const Logger = require('../logger/logger');
 const log = new Logger('Coupan_Controller');
 const coupanDao = require('../Dao/coupan.dao')
 
+
+async function editCoupanStatus(req, res) {
+    console.log("check");
+    const coupanInfo = req.body;
+    let { error } = CoupanValidator.validateEditCoupanSchema(coupanInfo, res);
+    console.log("check");
+    if (isNotValidSchema(error, res)) return;
+    console.log("check2");
+    try {
+        console.log("check3");
+        const response = await coupanDao.editCoupanDao(coupanInfo, res);
+        return response;
+        // res.status(200).send({ message: "Working" })
+    } catch (error) {
+        log.error(`Error in adding new coupan ${coupanInfo}` + error);
+    }
+}
 async function addCoupanController(req, res) {
     console.log("check");
     const coupanInfo = req.body;
@@ -59,5 +76,6 @@ function isNotValidSchema(error, res) {
 
 module.exports = {
     addCoupanController,
-    getAllCoupansController
+    getAllCoupansController,
+    editCoupanStatus
 };

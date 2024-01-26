@@ -28,6 +28,31 @@ async function getAllCoupansDao(coupanInfo, res) {
     })
 }
 
+
+async function editCoupanDao(coupanInfo, res) {
+    console.log({ coupanInfo });
+
+    await CoupanModel.findOneAndUpdate({ code: coupanInfo.code }, {
+        $set: {
+            "status": coupanInfo.status,
+        }
+    }, async (err, response) => {
+        if (err || !response) {
+            console.log({ err }, { response });
+            return res.status(404).send({
+                message: 'no coupan found with ' + coupanInfo.code + " this code."
+            })
+        }
+        else {
+            return res.status(200).send({
+                message: 'coupan status upgraded'
+            })
+
+        }
+    })
+
+
+}
 async function addCoupanDao(coupanInfo, res) {
     console.log({ coupanInfo });
 
@@ -44,7 +69,8 @@ async function addCoupanDao(coupanInfo, res) {
                 "code": coupanInfo.code,
                 "discount": coupanInfo.discount,
                 "validTill": coupanInfo.validTill,
-                "limit": coupanInfo.limit
+                "limit": coupanInfo.limit,
+                "status": coupanInfo.status
             });
 
             const result = await newCoupan.save((error, payload) => {
@@ -70,5 +96,6 @@ async function addCoupanDao(coupanInfo, res) {
 
 module.exports = {
     addCoupanDao,
-    getAllCoupansDao
+    getAllCoupansDao,
+    editCoupanDao
 }

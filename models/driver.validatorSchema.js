@@ -6,6 +6,9 @@ const validateAddDriversSchema = (driverinfo) => {
     return Joi.validate(driverinfo, driverSchemaModel.addDriversSchemaModel);
 }
 
+const validateSystemStatus = (driverInfo) => {
+    return Joi.validate(driverInfo, driverSchemaModel.SystemWorking);
+}
 const validateLoginAdminSchema = (driverInfo) => {
     return Joi.validate(driverInfo, driverSchemaModel.adminLoginSchemaModel);
 }
@@ -28,5 +31,6 @@ module.exports = {
     validateLoginDriverSchema,
     validateGetOrdersSchema,
     validateLoginAdminSchema,
+    validateSystemStatus,
     validateUpdateDriverOrderSchema
 }

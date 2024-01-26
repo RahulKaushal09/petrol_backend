@@ -6,10 +6,10 @@ const { FuelModel } = require('../models/fuel.schemaModel');
 
 const secretKey = "12345"
 
-async function getAllfuels(fuelInfo, res) {
+async function getAllfuels(req, res) {
     log.success('dao layer entered');
-    console.log({ fuelInfo });
-    return await FuelModel.find({ phoneNo: fuelInfo }, (err, response) => {
+    // console.log({ fuelInfo });
+    return await FuelModel.find({}, (err, response) => {
         log.success('dao querry layer entered');
         if (err || !response) {
             log.error(`failed in the query in dao layer ` + err);
@@ -27,9 +27,9 @@ async function getAllfuels(fuelInfo, res) {
 }
 
 async function updateFuelDao(fuelInfo, res) {
-    const phoneNo = fuelInfo.phoneNo;
-    console.log({ phoneNo }, "moment of truth flag");
-    await FuelModel.findOneAndUpdate({ phoneNo: phoneNo }, {
+    // const phoneNo = fuelInfo.phoneNo;
+    // console.log({ phoneNo }, "moment of truth flag");
+    await FuelModel.findOneAndUpdate({}, {
         petrol: fuelInfo.petrol,
         diesel: fuelInfo.diesel,
         premium: fuelInfo.premium
@@ -50,28 +50,33 @@ async function updateFuelDao(fuelInfo, res) {
 
 async function addFuelDao(fuelInfo, res) {
     console.log({ fuelInfo });
-    let newFuel = new FuelModel({
-        "phoneNo": fuelInfo.phoneNo,
-        "petrol": fuelInfo.petrol,
-        "diesel": fuelInfo.diesel,
-        "premium": fuelInfo.premium
+
+    const filter = {}; // Add appropriate filtering criteria based on your data structure
+    const update = {
+        $set: {
+            "petrol": fuelInfo.petrol,
+            "diesel": fuelInfo.diesel,
+            "premium": fuelInfo.premium
+        }
+    };
+
+    const options = { upsert: true, new: true };
+
+    const result = await FuelModel.findOneAndUpdate(filter, update, options, (err, response) => {
+        console.log("update query entered");
+        if (err || !response) {
+            log.error(`Error in updating fuel information: ${err}`);
+            return res.status(500).send({
+                message: 'Error in updating fuel information'
+            });
+        }
+        log.blink('Fuel information has been updated in the db');
+        return res.status(200).send({
+            message: 'Fuel information has been successfully updated'
+        });
     });
 
-    const result = await newFuel.save((err, response) => {
-        console.log("save querry entered");
-        if (err || !response) {
-            log.error(`Error in adding new fuel ` + err);
-            return res.status(500).send({
-                message: 'error in adding new fuels'
-            })
-        }
-        log.blink('New fuel has been added to the db');
-        return res.status(200).send({
-            message: 'New fuel has successfully added'
-        })
-    })
     return result;
-
 }
 
 module.exports = {

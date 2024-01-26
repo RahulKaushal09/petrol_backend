@@ -1,12 +1,33 @@
 const Logger = require('../logger/logger');
 const log = new Logger('Driver_Dao');
-const { DriverModel, AdminModel } = require('../models/driverSchema');
+const { DriverModel, AdminModel, SystemStatusModel } = require('../models/driverSchema');
 const { orderModel } = require('../models/order.schemaModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const secretKey = "12345";
 
+async function adminChangeSystemStatus(systemInfo, res) {
+    const status = systemInfo.status;
+
+    const result = await SystemStatusModel.findOneAndUpdate({}, { $set: { "status": status } }, { upsert: true, new: true },
+
+        async (err, response) => {
+            if (err) {
+                log.error(`error in updating the system status ->` + err);
+                res.status(420).send({
+                    message: 'error in updating the system status'
+                })
+            }
+            else {
+                return res.status(200).send({
+                    message: 'System status updated successfully',
+                    result: response
+                })
+            }
+        })
+    return result;
+}
 async function adminLoginDao(driverInfo, res) {
     const username = driverInfo.username;
     const password = driverInfo.password;
@@ -338,5 +359,6 @@ module.exports = {
     adminLoginDao,
     updateDriverDao,
     getPetrolDao,
+    adminChangeSystemStatus,
     addAdminDao
 }

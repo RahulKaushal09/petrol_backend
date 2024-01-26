@@ -21,9 +21,9 @@ async function createFuelController(req, res) {
 
 async function getAllfuelsController(req, res) {
     log.info('controller entered');
-    const fuelInfo = req.params.phoneNo;
+    // const fuelInfo = req.params.phoneNo;
     try {
-        const result = await fuelDao.getAllfuels(fuelInfo, res);
+        const result = await fuelDao.getAllfuels(req, res);
         return result;
     } catch (error) {
         log.error(`Error in Dao trycatch layer ` + error)

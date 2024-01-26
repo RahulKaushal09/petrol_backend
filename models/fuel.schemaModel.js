@@ -4,21 +4,21 @@ const Logger = require('../logger/logger');
 const log = new Logger('Fuel_SchemaModel');
 
 const addFuelSchemaModel = {
-    phoneNo: Joi.string(),
-    petrol: Joi.string(),
-    diesel: Joi.string(),
-    premium: Joi.string()
+    // phoneNo: Joi.string(),
+    petrol: Joi.string().required().max(10),
+    diesel: Joi.string().required().max(10),
+    premium: Joi.string().required().max(10)
 }
 
 const updateFuelSchemaModel = {
-    phoneNo: Joi.string(),
-    petrol: Joi.string(),
-    diesel: Joi.string(),
-    premium: Joi.string()
+    // phoneNo: Joi.string(),
+    petrol: Joi.string().required().max(10),
+    diesel: Joi.string().required().max(10),
+    premium: Joi.string().required().max(10)
 }
 
 const mongoFuelSchema = new mongoose.Schema({
-    phoneNo: String,
+    // phoneNo: String,
     petrol: String,
     diesel: String,
     premium: String

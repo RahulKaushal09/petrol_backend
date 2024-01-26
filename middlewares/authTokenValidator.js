@@ -16,13 +16,13 @@ function authTokenValidator(req, res, next) {
         // const username = payload.username;
         const phoneNo = payload.phoneNo;
 
-        if (req.method === 'GET' && phoneNo !== req.params.phoneNo) {
-            console.log("middleware check for validation");
-            log.error(`username or phoneNo not matching with token`);
-            return res.status(403).send({
-                message: 'Validation error with token'
-            })
-        }
+        // if (req.method === 'GET' && phoneNo !== req.params.phoneNo) {
+        //     console.log("middleware check for validation");
+        //     log.error(`username or phoneNo not matching with token`);
+        //     return res.status(403).send({
+        //         message: 'Validation error with token'
+        //     })
+        // }
         // if (phoneNo !== req.body.phoneNo) {
         //     console.log("middleware check for validation");
         //     log.error(`username or phoneNo not matching with token`);

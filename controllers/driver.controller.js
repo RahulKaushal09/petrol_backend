@@ -6,14 +6,27 @@ const nodemailer = require("nodemailer");
 require('dotenv').config();
 // const jwt = require('jsonwebtoken');
 
-async function adminLoginController(req, res) {
-    const driverInfo = req.body;
-    let { error } = driverValidator.validateLoginAdminSchema(driverInfo, res);
+async function adminSystemStatus(req, res) {
+    const systemInfo = req.body;
+    let { error } = driverValidator.validateSystemStatus(systemInfo, res);
     // console.log("check");
     if (isNotValidSchema(error, res)) return;
 
     try {
-        const result = await driverDao.adminLoginDao(driverInfo, res);
+        const result = await driverDao.adminChangeSystemStatus(systemInfo, res);
+        return result;
+    } catch (error) {
+        log.error(`Error in loggin in the driver`);
+    }
+}
+async function adminLoginController(req, res) {
+    const adminInfo = req.body;
+    let { error } = driverValidator.validateLoginAdminSchema(adminInfo, res);
+    // console.log("check");
+    if (isNotValidSchema(error, res)) return;
+
+    try {
+        const result = await driverDao.adminLoginDao(adminInfo, res);
         return result;
     } catch (error) {
         log.error(`Error in loggin in the driver`);
@@ -35,9 +48,9 @@ async function driverLoginController(req, res) {
 }
 
 async function getAllOrdersController(req, res) {
-    const driverInfo = req.params.phoneNo;
+    // const driverInfo = req.params.phoneNo;
     try {
-        const result = await driverDao.getAllOrdersDao(driverInfo, res);
+        const result = await driverDao.getAllOrdersDao(req, res);
         return result;
     } catch (error) {
         log.error(`Error in the controller of getall orders`)
@@ -128,5 +141,6 @@ module.exports = {
     adminLoginController,
     updateAssignedOrdersController,
     getOnlyPetrolController,
+    adminSystemStatus,
     addAdmin
 };
