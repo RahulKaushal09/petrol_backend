@@ -11,7 +11,8 @@ const {
     addAdmin
 } = require('../controllers/driver.controller.js');
 const { driverTokenValidator } = require('../middlewares/driverTokenValidator.js');
-const { adminTokenValidator } = require('../middlewares/adminTokenValidator.js')
+const { adminTokenValidator } = require('../middlewares/adminTokenValidator.js');
+const checkSystemStatusMiddleware = require('../middlewares/checkSystemStatus.js');
 
 const driverRouter = express.Router();
 
