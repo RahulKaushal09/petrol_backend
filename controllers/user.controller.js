@@ -10,6 +10,7 @@ const { UserModel, UserEmailModel } = require('../models/user.schemaModel')
 const jwt = require('jsonwebtoken');
 const otpGenerator = require('otp-generator');
 const nodemailer = require('nodemailer');
+const { ScheduleModel } = require('../models/order.schemaModel');
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -73,6 +74,73 @@ const secretKey = "123456789";
 //     });
 async function existsEmail(req, res, boolFlag) {
 
+
+}
+async function getSchedule(req, res) {
+    try {
+
+        await ScheduleModel.find({}, (err, response) => {
+            console.log({ response });
+            if (err || !response) {
+                log.error(`error in get schedule controller `)
+                return;
+            }
+            else {
+                log.info("successfully entered schedule");
+                const currentDate = new Date();
+                const scheduleData = response[0].schedule.map(scheduleItem => {
+                    const filteredSlots = (scheduleItem.slots || []).filter(slot => {
+                        if (slot && scheduleItem.date && slot.time && slot.possibility !== 0) {
+                            const slotDateTime = new Date(scheduleItem.date);
+                            const [timeStart, timeEnd] = slot.time.split('-')[0].split(':').map(Number);
+                            // console.log(timeStart);
+                            const hoursStart = timeStart % 12 + 12;
+                            const currentDay = currentDate.getDate();
+                            const currentHours = currentDate.getHours();
+
+                            // Extract date and hours from slotDateTime
+                            slotDateTime.setHours(hoursStart, 0);
+                            const slotDay = slotDateTime.getDate();
+                            let slotHours = slotDateTime.getHours();
+                            // slotHours = slotHours % 12 + slotHours;
+
+                            // Compare the date and hours
+                            if (currentDay == slotDay) {
+                                console.log(slotHours);
+                                return (currentHours < slotHours)
+                            }
+                            else {
+                                return true
+                            }
+
+                            // slotDateTime.setHours(hours);
+                            // slotDateTime.setMinutes(minutes);
+                            // return currentDate.getTime() <= slotDateTime.getTime();
+                        }
+                        return false;
+                    }).map(filteredSlot => {
+                        if (filteredSlot) {
+                            return { ...filteredSlot.toObject() };
+                        }
+                        return filteredSlot;
+                    });
+
+                    return { ...scheduleItem.toObject(), slots: filteredSlots };
+                });
+
+                return res.status(200).send({
+                    statusCode: 200,
+                    result: scheduleData
+                });
+
+            }
+        })
+    } catch (error) {
+        log.error(`error while finding schedule ` + error)
+        return res.status(420).send({
+            message: "error while finding schedule "
+        })
+    }
 
 }
 async function verifyEmailOtp(req, res) {
@@ -152,12 +220,16 @@ async function verifyEmailOtp(req, res) {
                     }
                 })
                 return res.status(200).send({
+                    statusCode: 200,
                     message: 'Otp matched successfully and updated name and email'
                 })
             })
             return existingData;
         } catch (error) {
             log.error(`Error in verifying email otp` + error)
+            return res.status(420).send({
+                message: "Error in verifying email otp"
+            })
         }
     }
 }
@@ -212,6 +284,7 @@ async function sendEmailOtp(req, res) {
                     }
                     log.info(`otp sent to email succesfully`);
                     return res.status(200).send({
+                        statusCode: 200,
                         message: `Successfully saved otp and email for verification`
                     })
                 });
@@ -237,18 +310,30 @@ async function sendOtpController(req, res) {
             .verifications.create({
                 to: `+${loginInfo.countryCode}${loginInfo.phoneNo}`,
                 channel: 'sms',
+            }, (error, result) => {
+                if (error || !result) {
+                    log.error(`Error in sending the otp using twilio for phone No ${loginInfo.phoneNo}`)
+                    return res.status(400).send({
+                        message: 'Error in sending otp!',
+                        statusCode: 400
+                    })
+                }
+                else {
+                    console.log(otpResponse);
+                    log.info(`Sucessfully sent the otp to phoneNo ${loginInfo.phoneNo}`);
+                    res.status(200).send({
+                        message: 'Otp Sent to phone Number ' + loginInfo.phoneNo,
+                        result: otpResponse,
+                        statusCode: 200
+                    })
+                }
             })
-        console.log(otpResponse);
-        log.info(`Sucessfully sent the otp to phoneNo ${loginInfo.phoneNo}`);
-        res.status(200).send({
-            message: 'Otp Sent to phoneNo' + loginInfo.phoneNo,
-            result: otpResponse
-        })
     } catch (error) {
         // error in sending the otp using twilio
-        log.error(`Error in sending the otp using twilio for phone No ${loginInfo.phoneNo}`)
+        log.error(`Error in catch of sending the otp using twilio for phone No ${loginInfo.phoneNo}`)
         return res.status(400).send({
-            message: 'Error in sending otp!'
+            message: 'Error in sending otp!',
+            statusCode: 400
         })
     }
 }
@@ -299,6 +384,7 @@ async function verifyUpdatePhoneController(req, res) {
                     }
                     else {
                         return res.status(200).send({
+                            statusCode: 200,
                             message: 'Updated phoneNo Successfully'
                         })
                     }
@@ -360,7 +446,9 @@ async function verifyOtpController(req, res) {
                 else {
                     // redirect it to name and usernam waala screen
                     return res.status(200).send({
+                        statusCode: 200,
                         message: 'newUser',
+
                         // result: resposne
                     })
                 }
@@ -382,6 +470,7 @@ async function verifyOtpController(req, res) {
                     }
                     log.info(`Successfully saved the phoneNo into the db`);
                     return res.status(200).send({
+                        statusCode: 200,
                         message: 'Phone no saved in the db!'
                     })
                 })
@@ -541,9 +630,16 @@ async function getByUsernameController(req, res) {
 function isNotValidSchema(error, res) {
     if (error) {
         log.error(`Schema validation error:${error.details[0].message}`);
-        res.status(400).send({
-            message: error.details[0].message
-        });
+        if (error.details[0].message == '"phoneNo" length must be at least 10 characters long') {
+            res.status(400).send({
+                message: "Phone No. must be of 10 Digits"
+            });
+        }
+        else {
+            res.status(400).send({
+                message: error.details[0].message
+            });
+        }
         return true;
     }
     return false;
@@ -564,5 +660,6 @@ module.exports = {
     verifyEmailOtp,
     updateNameController,
     getByIdController,
+    getSchedule,
     verifyUpdatePhoneController
 };

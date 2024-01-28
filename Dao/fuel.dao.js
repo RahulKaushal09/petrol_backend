@@ -43,6 +43,7 @@ async function updateFuelDao(fuelInfo, res) {
         }
         log.info(`Successfully updated fuels`);
         return res.status(200).send({
+            statusCode: 200,
             message: `updated the fuels`
         })
     });
@@ -72,6 +73,7 @@ async function addFuelDao(fuelInfo, res) {
         }
         log.blink('Fuel information has been updated in the db');
         return res.status(200).send({
+            statusCode: 200,
             message: 'Fuel information has been successfully updated'
         });
     });

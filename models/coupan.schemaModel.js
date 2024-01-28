@@ -7,6 +7,24 @@ const editCoupanSchemaModel = {
     code: Joi.string().required().max(50),
     status: Joi.string().required().max(50)
 }
+const findCoupanSchemaModel = {
+
+    code: Joi.string().required().max(50),
+    order: {
+        fuelType: Joi.string().required(),
+        fuelAmount: Joi.string().required(),
+        emergency: Joi.boolean(),
+        Date: Joi.date(),
+        preferredTiming: Joi.string().required(),
+        CoupanId: Joi.string(),
+        addressId: Joi.string().required(),
+        status: Joi.string().required(),
+        assignedTo: Joi.string().required(),
+        assignTiming: Joi.string().required(),
+    }
+
+
+}
 const addCoupanSchemaModel = {
     name: Joi.string().required().max(50),
     // phoneNo: Joi.string().required().max(50),
@@ -39,5 +57,6 @@ module.exports = {
     CoupanModel,
     addCoupanSchemaModel,
     getAllCoupanSchemaModel,
+    findCoupanSchemaModel,
     editCoupanSchemaModel
 }

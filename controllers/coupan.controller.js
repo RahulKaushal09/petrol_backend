@@ -37,6 +37,21 @@ async function addCoupanController(req, res) {
     }
 }
 
+async function findCoupanController(req, res) {
+    log.info('controller entered');
+    const coupanInfo = req.body;
+    let { error } = CoupanValidator.validateFindCoupanSchema(coupanInfo, res);
+    console.log("check");
+    if (isNotValidSchema(error, res)) return;
+    console.log("check2");
+
+    try {
+        const result = await coupanDao.findCoupanByCode(coupanInfo, res);
+        return result;
+    } catch (error) {
+        log.error(`Error in Dao trycatch layer ` + error)
+    }
+}
 async function getAllCoupansController(req, res) {
     log.info('controller entered');
     const coupanInfo = req;
@@ -77,5 +92,6 @@ function isNotValidSchema(error, res) {
 module.exports = {
     addCoupanController,
     getAllCoupansController,
+    findCoupanController,
     editCoupanStatus
 };

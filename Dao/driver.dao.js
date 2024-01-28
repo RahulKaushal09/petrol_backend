@@ -21,6 +21,7 @@ async function adminChangeSystemStatus(systemInfo, res) {
             }
             else {
                 return res.status(200).send({
+                    statusCode: 200,
                     message: 'System status updated successfully',
                     result: response
                 })
@@ -182,6 +183,7 @@ async function updateDriverDao(driverInfo, res) {
             log.info(`Sucessfully added new order to phoneNo ${phoneNo}`);
             // console.log(res);
             return res.status(200).send({
+                statusCode: 200,
                 message: 'Successfully added new order',
             })
         })
@@ -212,6 +214,7 @@ async function getPetrolDao(driverInfo, res) {
             console.log(array);
             log.info(`successfully fetched orders for the driver with phoneNO ${phoneNo}`);
             return res.status(200).send({
+                statusCode: 200,
                 message: 'Successfully fetched all orders',
                 result: array
             })
@@ -230,6 +233,7 @@ async function getAllOrdersDao(driverInfo, res) {
         }
         log.info(`successfully fetched orders for all drivers`);
         return res.status(200).send({
+            statusCode: 200,
             message: 'Successfully fetched all orders',
             result: response
         })
@@ -261,6 +265,7 @@ async function getordersDao(driverInfo, res) {
             console.log(array);
             log.info(`successfully fetched orders for the driver with phoneNO ${phoneNo}`);
             return res.status(200).send({
+                statusCode: 200,
                 message: 'Successfully fetched all orders',
                 result: array
             })

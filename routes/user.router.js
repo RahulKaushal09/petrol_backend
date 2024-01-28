@@ -13,7 +13,8 @@ const {
     verifyEmailOtp,
     updateNameController,
     getByIdController,
-    verifyUpdatePhoneController
+    verifyUpdatePhoneController,
+    getSchedule
 } = require('../controllers/user.controller')
 const { authTokenValidator } = require('../middlewares/authTokenValidator');
 const checkSystemStatusMiddleware = require('../middlewares/checkSystemStatus');
@@ -22,7 +23,7 @@ const userRouter = express.Router();
 // userRouter.get('/getbyusername/:username', getByUsernameController,);//working
 // userRouter.get('/getbyphoneno/:phoneNo', authTokenValidator, getByPhoneNoController,);//working
 // // getAdrbyID
-// userRouter.get('/getbyaddressbyId/:Id', getByIdController);//working
+// userRouter.get('/getbyaddressbyId/:Id', getByIdController);//work
 userRouter.post('/updatephone', authTokenValidator, checkSystemStatusMiddleware, updatePhoneController,);//working
 userRouter.post('/verifyUpdatePhone', authTokenValidator, checkSystemStatusMiddleware, verifyUpdatePhoneController,);//working
 userRouter.post('/updateAddress', authTokenValidator, checkSystemStatusMiddleware, updateAddress,);//working
@@ -32,7 +33,8 @@ userRouter.post('/sendotp', checkSystemStatusMiddleware, sendOtpController);//wo
 userRouter.post('/verifyOtp', checkSystemStatusMiddleware, verifyOtpController);//working
 userRouter.post('/emailSendOtp', checkSystemStatusMiddleware, sendEmailOtp);//working
 userRouter.post('/emailVerifyOtp', authTokenValidator, checkSystemStatusMiddleware, verifyEmailOtp);//working
-userRouter.post('/emailVerifyOtp', authTokenValidator, checkSystemStatusMiddleware, verifyEmailOtp);//working
+userRouter.get('/getSchedule', authTokenValidator, checkSystemStatusMiddleware, getSchedule);//working
+
 // userRouter.post('/updateusername', authTokenValidator, updateUsernameController,);// working
 // userRouter.post('/updatename', authTokenValidator, updateNameController,);// working
 // userRouter.post('/middleware', authTokenValidator)// just for debugging

@@ -14,7 +14,7 @@ function authTokenValidator(req, res, next) {
         const payload = jwt.verify(token, secretKey);
         console.log({ payload });
         // const username = payload.username;
-        const phoneNo = payload.phoneNo;
+        // const phoneNo = payload.phoneNo;
 
         // if (req.method === 'GET' && phoneNo !== req.params.phoneNo) {
         //     console.log("middleware check for validation");

@@ -3,9 +3,95 @@ const log = new Logger('Coupan_Dao');
 // const { orderModel } = require('../models/order.schemaModel')
 // const { UserModel } = require('../models/user.schemaModel')
 const { CoupanModel } = require('../models/coupan.schemaModel');
+const { FuelModel } = require('../models/fuel.schemaModel');
 
 const secretKey = "12345"
 
+async function findCoupanByCode(coupanInfo, res) {
+    try {
+
+        log.success('dao layer entered');
+        console.log({ coupanInfo });
+
+        return await CoupanModel.findOne({ code: coupanInfo.code, status: "false" }, async (err, response) => {
+            log.success('dao querry layer entered');
+            if (err || !response) {
+                log.error(`failed in the query in dao layer ` + err);
+                return res.status(404).send({
+                    message: 'Cannot find any coupans '
+                })
+            }
+            else {
+                console.log(response);
+                await FuelModel.find({}, async (e, fuelRates) => {
+                    if (e || !fuelRates) {
+                        // console.log(r);
+                        log.error(`Error in finding fuel value` + e);
+                        return res.status(400).send({
+                            message: 'Error in finding fuel value'
+                        })
+                    }
+                    else {
+                        log.info(` fuel value entered`);
+                        const fuelType = coupanInfo.order.fuelType;
+                        // Find the matching fuel rate based on fuelType
+                        const matchingFuel = fuelRates[0]; // Assuming there is only one document in the result
+                        let rate;
+                        console.log(fuelRates);
+                        if (matchingFuel) {
+                            // Access the rate of the matching fuel type using matchingFuel[fuelType]
+                            rate = matchingFuel[fuelType.toLowerCase()];
+
+                            if (rate) {
+                                console.log(`Fuel rate for ${fuelType}: ${rate}`);
+                                // return res.send("ok");
+                            } else {
+                                console.log(`Rate for fuel type ${fuelType} not found in database`);
+                                return res.status(404).send({
+                                    message: `Rate for fuel type ${fuelType} not found in database`
+                                });
+                            }
+                        } else {
+                            console.log(`Fuel type ${fuelType} not found in database`);
+                            return res.status(404).send({
+                                message: `Fuel type ${fuelType} not found in database`
+                            });
+                        }
+
+                        rate = parseInt(rate);
+
+                        const Amount = parseInt(coupanInfo.order.fuelAmount) * rate;
+
+                        console.log(parseInt(coupanInfo.order.fuelAmount));
+                        // console.log({ totalAmount });
+                        const discount = response.discount;
+                        const temp = parseInt(discount);
+                        console.log(response);
+                        // console.log(parseInt(orderInfo.order.fuelAmount));
+                        totalAmount = ((100 - temp) / 100) * parseInt(Amount);
+                        console.log({ totalAmount });
+                        // const discount = response.discount;
+                        // const temp = parseInt(discount);
+                        // console.log(parseInt(coupanInfo.order.fuelAmount));
+                        // totalAmount = ((100 - temp) / 100) * parseInt(coupanInfo.order.fuelAmount);
+                        // console.log({ totalAmount });
+                        log.success('Successfully fetched the coupan with the given code : ' + coupanInfo.code);
+                        res.status(200).send({
+                            message: 'Successfully applied the coupans with the given code : ' + coupanInfo.code,
+                            totalAmount: totalAmount
+                        })
+
+                    }
+                })
+            }
+        })
+    } catch (error) {
+        log.error("error while finding a coupan")
+        return res.status(420).send({
+            message: "error while finding a coupan with code : " + coupanInfo.code
+        })
+    }
+}
 async function getAllCoupansDao(coupanInfo, res) {
     log.success('dao layer entered');
     console.log({ coupanInfo });
@@ -45,6 +131,7 @@ async function editCoupanDao(coupanInfo, res) {
         }
         else {
             return res.status(200).send({
+                statusCode: 200,
                 message: 'coupan status upgraded'
             })
 
@@ -83,6 +170,7 @@ async function addCoupanDao(coupanInfo, res) {
                 } else {
                     log.blink('New coupan has been added to the db');
                     return res.status(200).send({
+                        statusCode: 200,
                         message: 'New Coupan has successfully added'
                     })
                 }
@@ -97,5 +185,6 @@ async function addCoupanDao(coupanInfo, res) {
 module.exports = {
     addCoupanDao,
     getAllCoupansDao,
+    findCoupanByCode,
     editCoupanDao
 }

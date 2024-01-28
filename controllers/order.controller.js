@@ -51,6 +51,7 @@ async function updateOrderStatusController(req, res) {
         const response = await orderDao.updateOrderStatusDao(orderInfo, res);
         return response;
         // return res.status(200).send({
+        // statusCode: 200,
         //     message: 'testing phase'
         // })
     } catch (error) {

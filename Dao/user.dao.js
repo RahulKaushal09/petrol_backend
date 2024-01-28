@@ -56,6 +56,7 @@ async function getaddressbyIdDao(loginInfo, res) {
             console.log(array);
             log.info(`Foudn a user with data ${_id}`);
             return res.status(200).send({
+                statusCode: 200,
                 // username: username,
                 result: array,
                 message: 'Found a user with ' + _id
@@ -126,6 +127,7 @@ async function getByPhoneNo(loginInfo, res) {
         else {
             log.info(`Found a user with phone No ${phoneNo}`);
             return res.status(200).send({
+                statusCode: 200,
                 result: response,
                 message: `FOund a user with phoneno ${phoneNo}`
             })
@@ -159,6 +161,7 @@ async function updateAddressDao(phoneNo, loginInfo, res) {
 
             log.info(`Found and successfully updated the phoneNo for the user ${phoneNo} from prev address ${response.address} to new address ${address}`);
             return res.status(200).send({
+                statusCode: 200,
                 message: `Successfully the address from ${response.address} to new address ${address}`,
                 result: response
             })
@@ -189,6 +192,7 @@ async function addAddressDao(phoneNo, loginInfo, res) {
                     log.info(`Sucessfully added new addres in the addres array to phoneNo ${phoneNo}`);
                     // console.log(res);
                     return res.status(200).send({
+                        statusCode: 200,
                         message: 'Successfully added new address',
                     })
 
@@ -268,12 +272,15 @@ async function deleteAddressDao(phoneNo, loginInfo, res) {
                 }
                 log.info(`Successfully deleted the address from phoneNo ${phoneNo}'s addresses`);
                 return res.status(200).send({
+                    statusCode: 200,
                     message: 'Successfully deleted the address'
                 })
             }
         );
         return result;
-        // return res.status(200).send({ message: 'testing phase' })
+        // return res.status(200).send({
+        // statusCode: 200, message: 'testing phase'
+
     } catch (error) {
         log.error(" error in deleting the address in Dao");
         res.status(400).send({
@@ -299,6 +306,7 @@ async function updateUsernameDao(loginInfo, res) {
 
                 log.info(`Successfully updated the name`);
                 return res.status(200).send({
+                    statusCode: 200,
                     message: 'Successfully updated the name'
                 })
             }
@@ -320,6 +328,7 @@ async function updateUsernameDao(loginInfo, res) {
         }
         log.info(`Successfully updated the user details for phoneNo ${phoneNo}`);
         return res.status(200).send({
+            statusCode: 200,
             message: `Updated the user details for the phoneNo ${phoneNo}`
         })
     })
@@ -353,6 +362,7 @@ async function updatePhoneNo(loginInfo, res) {
                     console.log(result);
                     log.info('Successfully sent an otp to the new phoneNo');
                     return res.status(200).send({
+                        statusCode: 200,
                         message: 'Otp sent to new phone no'
                     })
                 })
