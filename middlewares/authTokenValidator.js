@@ -13,6 +13,9 @@ function authTokenValidator(req, res, next) {
     try {
         const payload = jwt.verify(token, secretKey);
         console.log({ payload });
+
+        const phoneNo = payload.phoneNo;
+        req.phoneNo = phoneNo;
         // const username = payload.username;
         // const phoneNo = payload.phoneNo;
 

@@ -20,7 +20,7 @@ const driverRouter = express.Router();
 driverRouter.post('/adminlogin', adminLoginController);//working
 driverRouter.post('/changeSystemStatus', adminTokenValidator, adminSystemStatus);//working
 
-// driverRouter.post('/addAdmin', addAdmin);// deprecated service
+driverRouter.post('/addAdmin', addAdmin);// deprecated service
 driverRouter.post('/addDrivers', adminTokenValidator, addDriversController,);//frist driver
 // driverRouter.post('/updateAssignedOrders', adminTokenValidator, updateAssignedOrdersController);//working
 

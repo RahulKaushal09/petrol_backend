@@ -30,7 +30,9 @@ const deleteAddressSchemaModel = {
         saveas: Joi.string().required().max(50),
         fulladdr: Joi.string().required().max(100),
         vehicle: Joi.string().required().max(50),
-        vnumber: Joi.string().max(4).min(4).required()
+        vnumber: Joi.string().max(4).min(4).required(),
+        lat: Joi.string().required().max(100),
+        long: Joi.string().required().max(100)
     }
 }
 
@@ -40,7 +42,7 @@ const mongoEmailOtp = new mongoose.Schema({
 });
 
 const verifyEmailOtpSchemaModel = {
-    name: Joi.string().required(),
+    // name: Joi.string().required(),
     email: Joi.string().max(50).required(),
     emailOtp: Joi.string().max(6).required()
 }
@@ -104,7 +106,9 @@ const updateAddressSchemaModel = {
         saveas: Joi.string().required().max(50),
         fulladdr: Joi.string().required().max(100),
         vehicle: Joi.string().required().max(50),
-        vnumber: Joi.string().max(4).min(4).required()
+        vnumber: Joi.string().max(4).min(4).required(),
+        lat: Joi.string().required().max(100),
+        long: Joi.string().required().max(100)
     }
 }
 
@@ -117,7 +121,9 @@ const addAddressSchemaModel = {
         saveas: Joi.string().required().max(50),
         fulladdr: Joi.string().required().max(100),
         vehicle: Joi.string().required().max(50),
-        vnumber: Joi.string().max(4).min(4).required()
+        vnumber: Joi.string().max(4).min(4).required(),
+        lat: Joi.string().required().max(100),
+        long: Joi.string().required().max(100)
     }
 }
 
@@ -128,20 +134,21 @@ const sendOtpSchemaModel = {
 }
 
 const sendOtpEmailSchemaModel = {
-    username: Joi.string().email(),
+    name: Joi.string().required().max(40),
+    username: Joi.string().email().required().max(40),
 }
 
 const verifyOtpSchemaModel = {
     phoneNo: Joi.string().required().min(10).max(10),
     countryCode: Joi.string().required(),
-    OTP: Joi.string().required().min(4).max(4),
+    otp: Joi.string().required().min(4).max(4),
 }
 
 const verifyUpdatePhoneNoSchemaModel = {
     phoneNo: Joi.string().required().min(10).max(10),
     // oldPhoneNo: Joi.string().required().min(10).max(10),
     countryCode: Joi.string().required().max(5),
-    OTP: Joi.string().required().min(6).max(6),
+    otp: Joi.string().required().min(6).max(6),
 }
 
 mongoUserSchema.methods.encryptPassword = function () {

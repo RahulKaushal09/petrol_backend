@@ -15,9 +15,10 @@ var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: '900gamingg@gmail.com',
-        pass: 'xixp nbhw ilzu sxga'
+        pass: 'szfn qduq ewoc xqmb'
     }
 });
+
 // const readline = require("readline");
 
 async function registerNewUser(req, res) {
@@ -145,22 +146,12 @@ async function getSchedule(req, res) {
 }
 async function verifyEmailOtp(req, res) {
     const loginInfo = req.body;
-    const secretKey = "123456789";
 
-    // const loginInfo = req.body;
-    let payload;
-    const token = req.header('x-auth-token');
-    try {
-        payload = jwt.verify(token, secretKey);
-        console.log({ payload });
-    } catch (error) {
-        return res.status(400).send({
-            message: "wrong token"
-        })
-    }
 
-    const phoneNo = payload.phoneNo;
+
+    const phoneNo = req.phoneNo;
     let boolFlag;
+    let addressFlag = false;
     const temp = await UserModel.findOne({ phoneNo: phoneNo }, (err, response) => {
         console.log({ response });
         if (err || !response) {
@@ -168,15 +159,11 @@ async function verifyEmailOtp(req, res) {
             boolFlag = false;
             return;
         }
-        if (response.username) {
-            log.info(`found an existing email with this phoneNo`);
-            boolFlag = true;
-            return;
+        if (response.address.length > 0) {
+            addressFlag = true;
+            return
         }
-        else {
-            boolFlag = false;
-            return;
-        }
+
     })
     console.log({ temp }, { boolFlag });
     if (boolFlag == true) {
@@ -187,7 +174,7 @@ async function verifyEmailOtp(req, res) {
     else {
         // const loginInfo = req.body;
         const otp = loginInfo.emailOtp;
-        const name = loginInfo.name;
+        // const name = loginInfo.name;
         const email = loginInfo.email;
         let { error } = userValidator.validateVerifyEmailOtpSchema(loginInfo);
         if (isNotValidSchema(error, res)) return;
@@ -200,7 +187,8 @@ async function verifyEmailOtp(req, res) {
                 if (err || !response) {
                     log.error(`otp not matching ` + err);
                     return res.status(500).send({
-                        message: 'wrong otp'
+                        statusCode: 500,
+                        message: 'Something Went Wrong'
                     })
                 }
                 log.info(`Otp matched successfully`);
@@ -210,10 +198,13 @@ async function verifyEmailOtp(req, res) {
                 })
                 log.info(`Otp matched and deleted`);
                 // update emaill name 
-                await UserModel.findOneAndUpdate({ phoneNo: phoneNo }, { name: name, username: email }, (err, response) => {
+                await UserModel.findOneAndUpdate({ phoneNo: phoneNo }, { username: email }, (err, response) => {
                     if (err | !response) {
                         log.error(`Error in updating name and email`);
-                        return;
+                        return res.status(500).send({
+                            statusCode: 500,
+                            message: 'Something Went Wrong'
+                        })
                     }
                     else {
                         log.info(`Succesfully update name and email`)
@@ -221,80 +212,158 @@ async function verifyEmailOtp(req, res) {
                 })
                 return res.status(200).send({
                     statusCode: 200,
-                    message: 'Otp matched successfully and updated name and email'
+                    addressFlag: addressFlag,
+                    message: 'Profile Updated'
                 })
             })
             return existingData;
         } catch (error) {
             log.error(`Error in verifying email otp` + error)
-            return res.status(420).send({
+            return res.status(400).send({
+                statusCode: 400,
                 message: "Error in verifying email otp"
             })
         }
     }
 }
 async function sendEmailOtp(req, res) {
-
-    const loginInfo = req.body;
-    const email = loginInfo.username;
-    let { error } = userValidator.userValidateEmailSendOtpSchema(loginInfo);
-    if (isNotValidSchema(error, res)) return;
     try {
-        await UserEmailModel.findOneAndDelete({
-            email: email
-            // emailOtp: otp
-        }, (err, response) => {
-            console.log({ response });
-            if (err || !response) {
-                log.error(`no email found ` + err);
-            }
-            else {
-                log.info(`Deleted the email and otp from db`)
-            }
-        })
-    } catch (error) {
-        log.error(`No emails found`);
 
-    }
-    try {
-        const emailOtp = otpGenerator.generate(6, { digits: true });
-        var mailOptions = {
-            from: 'testapp@gmail.com',
-            to: email,
-            subject: 'otp verification petrol app',
-            text: emailOtp
-        };
-        // console.log({ emailOtp });
-        console.log("checkpoint 11");
-        await transporter.sendMail(mailOptions, async function (error, info) {
-            if (error) {
-                console.log(error);
-            } else {
-                console.log('Email sent: ' + info.response);
-                const newEmailVerification = new UserEmailModel({
-                    email: email,
-                    emailOtp: emailOtp,
-                });
-                await newEmailVerification.save((err, response) => {
-                    if (err || !response) {
-                        log.error(`Error in saving otp with email in db ` + err);
+        const loginInfo = req.body;
+        let { error } = userValidator.userValidateEmailSendOtpSchema(loginInfo);
+        if (isNotValidSchema(error, res)) return;
+        if (loginInfo.username) {
+            const name = loginInfo.name;
+            const phoneNo = req.phoneNo;
+            console.log(phoneNo);
+            UserModel.findOneAndUpdate(
+                { phoneNo: phoneNo },
+                { $set: { name: name } },
+                { new: true }, (error, info) => {
+                    if (error) {
+                        log.error("error while adding name ")
+                        console.log(error);
                         return res.status(500).send({
-                            message: 'Error in saving otp with email in db'
-                        })
+                            statusCode: 500,
+                            message: 'Something Went Wrong'
+                        });
                     }
-                    log.info(`otp sent to email succesfully`);
-                    return res.status(200).send({
-                        statusCode: 200,
-                        message: `Successfully saved otp and email for verification`
-                    })
-                });
-            }
-        })
+                    log.info("name updated in the db")
+                }
 
+
+            );
+            const email = loginInfo.username;
+
+            try {
+
+                await UserEmailModel.findOneAndDelete({
+                    email: email
+                    // emailOtp: otp
+                }, (err, response) => {
+                    console.log({ response });
+                    if (err || !response) {
+                        log.error(`no email found ` + err);
+                    }
+                    else {
+                        log.info(`Deleted the email and otp from db`)
+                    }
+                })
+            } catch (error) {
+                log.error(`No emails found`);
+
+            }
+            try {
+                const emailOtp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
+                var mailOptions = {
+                    // from: 'testapp@gmail.com',
+                    to: email,
+                    subject: 'Email Verification OTP',
+                    text: "This is your one time OTP for Email verification: "
+                        + emailOtp
+                };
+                // console.log({ emailOtp });
+                console.log("checkpoint 11");
+                transporter.sendMail(mailOptions, async (error, info) => {
+
+                    console.log(emailOtp);
+                    if (error) {
+                        console.log(error);
+                        return res.status(500).send({
+                            statusCode: 500,
+                            message: 'Error sending OTP!!'
+                        });
+                    } else {
+                        console.log('Email sent: ' + info.response);
+                        const newEmailVerification = new UserEmailModel({
+                            email: email,
+                            emailOtp: emailOtp,
+                        });
+                        await newEmailVerification.save((err, response) => {
+                            if (err || !response) {
+                                log.error(`Error in saving otp with email in db ` + err);
+                                return res.status(500).send({
+                                    statusCode: 500,
+                                    message: 'Something Went Wrong'
+                                })
+                            }
+                            else {
+                                log.info(`otp sent to email succesfully`);
+                                return res.status(200).send({
+                                    statusCode: 200,
+                                    message: `OTP sent to Email`
+                                })
+
+                            }
+                        });
+                    }
+                });
+
+
+            } catch (error) {
+                console.log(`Error in sending the otp using twilio for username recipient ${email}`)
+                return res.status(400).send({
+                    statusCode: 400,
+                })
+            }
+        }
+        else {
+            const name = loginInfo.name;
+            const phoneNo = req.phoneNo;
+            console.log(phoneNo);
+            await UserModel.findOneAndUpdate(
+                { phoneNo: phoneNo },
+                { $set: { name: name } },
+                { new: true }, // This option returns the updated document
+                (err, updatedUser) => {
+                    if (err) {
+                        log.error("Error updating user:", err);
+                        // Handle the error
+                        return res.status(400).send({
+                            statusCode: 400,
+                            message: "Something Went Wrong"
+                        })
+                    } else {
+                        console.log(updatedUser)
+                        log.info("User updated successfully:", updatedUser);
+                        return res.status(201).send({
+                            statusCode: 201,
+                            message: "Profile Updated"
+                        })
+                        // Do something with the updated user
+                    }
+                }
+            );
+        }
     } catch (error) {
-        console.log(`Error in sending the otp using twilio for username recipient ${email}`)
-        return res.status(400).send({})
+        log.error("Error in sending email user:", err);
+
+        return res.status(400).send({
+            statusCode: 400,
+            message: "Something Went Wrong"
+        })
     }
+
 }
 
 async function sendOtpController(req, res) {
@@ -305,13 +374,13 @@ async function sendOtpController(req, res) {
         // send otp service
         console.log(client);
         console.log(loginInfo);
-        const otpResponse = await client.verify.v2
+        await client.verify.v2
             .services(verifySid)
             .verifications.create({
                 to: `+${loginInfo.countryCode}${loginInfo.phoneNo}`,
                 channel: 'sms',
             }, (error, result) => {
-                if (error || !result) {
+                if (error) {
                     log.error(`Error in sending the otp using twilio for phone No ${loginInfo.phoneNo}`)
                     return res.status(400).send({
                         message: 'Error in sending otp!',
@@ -319,11 +388,10 @@ async function sendOtpController(req, res) {
                     })
                 }
                 else {
-                    console.log(otpResponse);
                     log.info(`Sucessfully sent the otp to phoneNo ${loginInfo.phoneNo}`);
                     res.status(200).send({
                         message: 'Otp Sent to phone Number ' + loginInfo.phoneNo,
-                        result: otpResponse,
+                        result: result,
                         statusCode: 200
                     })
                 }
@@ -405,7 +473,7 @@ async function verifyUpdatePhoneController(req, res) {
 
 async function verifyOtpController(req, res) {
     const loginInfo = req.body;
-    const otp = loginInfo.OTP;
+    const otp = loginInfo.otp;
     const phoneNo = loginInfo.phoneNo;
     console.log({ loginInfo });
     let { error } = userValidator.validateVerifyOtpSchema(loginInfo);
@@ -436,10 +504,22 @@ async function verifyOtpController(req, res) {
             if (existingUser) {
                 if (existingUser.name) {
                     // username may exits or it may not
-                    log.info(`User already found. LoggedIn successfully`);
+                    if (existingUser.address.length > 0) {
+                        log.info(`address already exist! LoggedIn successfully`);
+                        // console.log({ existingUser });
+                        return res.status(204).send({
+                            statusCode: 204,
+                            message: 'You have successfully logged In',
+                            token: jwtToken
+                            // result: existingUser
+                        });
+                    }
+                    log.info(`User already found. Need to add Address`);
                     console.log({ existingUser });
                     return res.status(203).send({
-                        message: 'You have successfully loggedIn',
+                        statusCode: 203,
+                        message: 'Please add Address',
+                        token: jwtToken
                         // result: existingUser
                     });
                 }
@@ -447,7 +527,8 @@ async function verifyOtpController(req, res) {
                     // redirect it to name and usernam waala screen
                     return res.status(200).send({
                         statusCode: 200,
-                        message: 'newUser',
+                        message: 'OTP verified',
+                        token: jwtToken
 
                         // result: resposne
                     })
@@ -465,13 +546,15 @@ async function verifyOtpController(req, res) {
                     if (err || !response) {
                         log.error(`Error in saving new phoneNo into the db ` + err);
                         return res.status(500).send({
-                            message: 'Error in saving phoneNo'
+                            statusCode: 500,
+                            message: 'Something Went Wrong'
                         })
                     }
                     log.info(`Successfully saved the phoneNo into the db`);
                     return res.status(200).send({
                         statusCode: 200,
-                        message: 'Phone no saved in the db!'
+                        message: 'OTP verified',
+                        token: jwtToken
                     })
                 })
                 return result;
@@ -480,24 +563,29 @@ async function verifyOtpController(req, res) {
         }
         else {
             res.status(400).send({
-                message: 'Wrong otp entered'
+                statusCode: 400,
+                message: 'Wrong OTP Entered'
             })
         }
 
     } catch (error) {
         log.error(`Error in verifing the otp` + error);
         res.status(404).send({
-            message: 'Wrong otp'
+            statusCode: 404,
+            message: 'Something Went Wrong'
         })
     }
 }
 
 async function getByPhoneNoController(req, res) {
-    const loginInfo = req.params.phoneNo;
-    console.log(loginInfo);
+    // const loginInfo = req.params.phoneNo;
+    // console.log(loginInfo);
     try {
+        const token = req.header('x-auth-token');
+        const payload_jwt = jwt.verify(token, secretKey);
+        const phoneNo = payload_jwt.phoneNo;
         console.log("checkpoint2");
-        const response = await userDao.getByPhoneNo(loginInfo, res);
+        const response = await userDao.getByPhoneNo(phoneNo, res);
         return response;
     } catch (error) {
         log.error(`Error in getting userdata by this phone No ${loginInfo.phoneno}` + error);
@@ -520,11 +608,9 @@ async function updateAddress(req, res) {
     let { err } = userValidator.validateUpdateAddressSchema(loginInfo, res);
     if (isNotValidSchema(err, res)) return;
     try {
-        const token = req.header('x-auth-token');
-        const payload_jwt = jwt.verify(token, secretKey);
-        const phoneNo = payload_jwt.phoneNo;
+
         console.log("checkpoint 2");
-        const response = await userDao.updateAddressDao(phoneNo, loginInfo, res);
+        const response = await userDao.updateAddressDao(loginInfo, res);
         // log.info(`Successfully updated the address`)
         return response;
     } catch (error) {
@@ -537,11 +623,9 @@ async function addAdressController(req, res) {
     let { error } = userValidator.validateAddaddressSchema(loginInfo, res);
     if (isNotValidSchema(error, res)) return;
     try {
-        const token = req.header('x-auth-token');
-        const payload_jwt = jwt.verify(token, secretKey);
-        const phoneNo = payload_jwt.phoneNo;
+
         console.log("checkpoint 1");
-        const result = await userDao.addAddressDao(phoneNo, loginInfo, res);
+        const result = await userDao.addAddressDao(loginInfo, res);
         return result;
     } catch (error) {
         log.error(`Error in adding new address ` + error)

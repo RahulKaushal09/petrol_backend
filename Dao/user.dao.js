@@ -112,14 +112,14 @@ async function resgisterNewUser(userObj, response) {
     return result;
 }
 
-async function getByPhoneNo(loginInfo, res) {
-    const phoneNo = loginInfo;
+async function getByPhoneNo(phoneNo, res) {
     console.log({ phoneNo });
     await UserModel.findOne({ phoneNo: phoneNo }, (err, response) => {
         console.log("checkpoint3");
         if (err || !response) {
             log.error(`Error in finding phoneNo ${phoneNo}` + err);
             return res.status(404).send({
+                statusCode: 404,
                 phoneNo: phoneNo,
                 message: 'No user with this ' + phoneNo + 'found'
             })
@@ -129,7 +129,7 @@ async function getByPhoneNo(loginInfo, res) {
             return res.status(200).send({
                 statusCode: 200,
                 result: response,
-                message: `FOund a user with phoneno ${phoneNo}`
+                message: `Found a user with phoneno ${phoneNo}`
             })
         }
     })
@@ -139,8 +139,9 @@ async function getAddress(phoneNo, res) {
     return await UserModel.findOne({ phoneNo: phoneNo });
 }
 
-async function updateAddressDao(phoneNo, loginInfo, res) {
+async function updateAddressDao(loginInfo, res) {
     const address = loginInfo.address;
+    const phoneNo = loginInfo.phoneNo;
     const _id = loginInfo._id;
     // const phoneNo = loginInfo.phoneNo;
     const userExists = getAddress(phoneNo, res);
@@ -169,10 +170,11 @@ async function updateAddressDao(phoneNo, loginInfo, res) {
     })
 }
 
-async function addAddressDao(phoneNo, loginInfo, res) {
+async function addAddressDao(loginInfo, res) {
     try {
 
         const adr = loginInfo.address;
+        const phoneNo = loginInfo.phoneNo;
         const payload = await getAddress(phoneNo, res);
         // const adrArray = payload.address;
         payload.address.push(adr);
