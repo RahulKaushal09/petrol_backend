@@ -23,17 +23,8 @@ const registerInputUserSchemaModel = {
 
 const deleteAddressSchemaModel = {
     // phoneNo: Joi.string(),
-    address: {
-        name: Joi.string().required().max(50),
-        phoneNo: Joi.string().required().max(10),
-        myself: Joi.boolean().required(),
-        saveas: Joi.string().required().max(50),
-        fulladdr: Joi.string().required().max(100),
-        vehicle: Joi.string().required().max(50),
-        vnumber: Joi.string().max(4).min(4).required(),
-        lat: Joi.string().required().max(100),
-        long: Joi.string().required().max(100)
-    }
+    address_id: Joi.string().required().max(100)
+
 }
 
 const mongoEmailOtp = new mongoose.Schema({
@@ -58,8 +49,14 @@ const mongoUserSchema = new mongoose.Schema({
             myself: Boolean,
             saveas: String,
             fulladdr: String,
+            houseNo: String,
+            area: String,
+            landmarks: String,
+            fulladdr: String,
             vehicle: String,
             vnumber: String,
+            lat: Number,
+            long: Number,
         }
     ]
 });
@@ -113,17 +110,19 @@ const updateAddressSchemaModel = {
 }
 
 const addAddressSchemaModel = {
-    // phoneNo: Joi.string().required().max(10).min(10),
     address: {
         name: Joi.string().required().max(50),
         phoneNo: Joi.string().required().max(10),
         myself: Joi.boolean().required(),
         saveas: Joi.string().required().max(50),
         fulladdr: Joi.string().required().max(100),
+        houseNo: Joi.string().required().max(50),
+        area: Joi.string().required().max(100),
+        landmarks: Joi.string().max(100),
         vehicle: Joi.string().required().max(50),
         vnumber: Joi.string().max(4).min(4).required(),
-        lat: Joi.string().required().max(100),
-        long: Joi.string().required().max(100)
+        lat: Joi.number().required().min(- 90).max(90).precision(10),
+        long: Joi.number().required().min(- 180).max(180).precision(10)
     }
 }
 
@@ -135,7 +134,7 @@ const sendOtpSchemaModel = {
 
 const sendOtpEmailSchemaModel = {
     name: Joi.string().required().max(40),
-    username: Joi.string().email().required().max(40),
+    username: Joi.string().email().max(40),
 }
 
 const verifyOtpSchemaModel = {

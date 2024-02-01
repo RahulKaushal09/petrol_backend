@@ -7,7 +7,7 @@ const orderDao = require('../Dao/order.dao')
 const jwt = require('jsonwebtoken');
 const secretKey = "123456789";
 
-async function addOrderController(req, res) {
+async function paymentBeforeOrderController(req, res) {
 
     const orderInfo = req.body;
     let { error } = orderValidator.validateAddOrderSchema(orderInfo, res);
@@ -16,10 +16,27 @@ async function addOrderController(req, res) {
     // console.log("check2");
     try {
         // console.log("check3");
-        const token = req.header('x-auth-token');
+        // const token = req.header('x-auth-token');
+        // const payload_jwt = jwt.verify(token, secretKey);
+        // const phoneNo = payload_jwt.phoneNo;
+        const response = await orderDao.paymentBeforeOrderDao(req, res);
+        return response;
+        // res.status(200).send({ message: "Working" })
+    } catch (error) {
+        log.error(`Error in adding new order for phoneNO ${orderInfo.phoneNo}` + error)
+        return res.status(400).send({
+            message: 'error while adding order ' + error
+        })
+    }
+}
+async function addOrderController(token, order, res) {
+
+
+    try {
+        console.log("check3");
         const payload_jwt = jwt.verify(token, secretKey);
         const phoneNo = payload_jwt.phoneNo;
-        const response = await orderDao.addOrderDao(phoneNo, orderInfo, res);
+        const response = await orderDao.addOrderDao(phoneNo, order, res);
         return response;
         // res.status(200).send({ message: "Working" })
     } catch (error) {
@@ -97,6 +114,7 @@ function isNotValidSchema(error, res) {
 
 module.exports = {
     getAllOrdersController,
+    paymentBeforeOrderController,
     addOrderController,
     updateOrderDetailsController,
     updateOrderStatusController,

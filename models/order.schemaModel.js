@@ -29,12 +29,11 @@ const addOrderSchemaModel = {
         fuelAmount: Joi.string().required(),
         emergency: Joi.boolean(),
         Date: Joi.date(),
-        preferredTiming: Joi.string().required(),
+        preferredTiming: Joi.string(),
         CoupanId: Joi.string(),
         addressId: Joi.string().required(),
         status: Joi.string().required(),
-        assignedTo: Joi.string().required(),
-        assignTiming: Joi.string().required(),
+
         // total amount after coupan
         // totalAmount: Joi.string().required()
     }
@@ -53,12 +52,8 @@ const mongoOrderSchema = new mongoose.Schema({
         addressId: String,
         status: String,
         assignedTo: String,
-        assignTiming: String,
         totalAmount: String
-        // flag status
-        // Assigned to?
-        // assign timing
-        //  
+
     }],
 });
 
@@ -74,7 +69,8 @@ const slotSchema = new mongoose.Schema({
 const daySchema = new mongoose.Schema({
     day: String,
     slots: [slotSchema],
-    date: Date
+    date: Date,
+    showDate: String
 });
 
 // Define the main schedule schema

@@ -170,32 +170,33 @@ async function updateAddressDao(loginInfo, res) {
     })
 }
 
-async function addAddressDao(loginInfo, res) {
+async function addAddressDao(req, res) {
     try {
-
+        log.info("adding new address")
+        const loginInfo = req.body;
+        const phoneNo = req.phoneNo;
         const adr = loginInfo.address;
-        const phoneNo = loginInfo.phoneNo;
-        const payload = await getAddress(phoneNo, res);
-        // const adrArray = payload.address;
-        payload.address.push(adr);
-        console.log(payload);
+
         const result = await UserModel.findOneAndUpdate(
             { phoneNo: phoneNo },
-            { address: payload.address },
+            { $push: { address: adr } }, // Use $push to add the new address to the array
+            { new: true },
             (err, response) => {
                 console.log("updatePoint");
                 if (err || !response) {
                     log.error(`Error in adding address` + err);
                     return res.status(400).send({
-                        message: 'Error in adding new address'
+                        message: 'Something Went Wrong'
                     })
                 }
                 else {
                     log.info(`Sucessfully added new addres in the addres array to phoneNo ${phoneNo}`);
                     // console.log(res);
+                    const newAddress = response.address[response.address.length - 1]
                     return res.status(200).send({
                         statusCode: 200,
                         message: 'Successfully added new address',
+                        addressId: newAddress._id
                     })
 
                 }
@@ -204,14 +205,16 @@ async function addAddressDao(loginInfo, res) {
     } catch (error) {
         log.error("error while adding address");
         res.status(400).send({
-            message: 'error while adding address Dao'
+            message: 'Something Went Wrong'
         })
 
     }
 }
 
-async function deleteAddressDao(phoneNo, loginInfo, res) {
+async function deleteAddressDao(req, res) {
     try {
+        let phoneNo = req.phoneNo;
+        let addressDel = req.body
 
         console.log("dao entered");
         // store in a variable phoneno and address
@@ -222,9 +225,8 @@ async function deleteAddressDao(phoneNo, loginInfo, res) {
         // return the result
         // const phoneNo = loginInfo.phoneNo;
         console.log(phoneNo);
-        const addressDel = loginInfo.address;
+        const address_id = addressDel.address_id;
         console.log({ addressDel });
-        let flag = false;
         let userExists = await getAddress(phoneNo);
         if (userExists == null) {
             log.info('cannot find any address with this number ' + phoneNo)
@@ -233,36 +235,11 @@ async function deleteAddressDao(phoneNo, loginInfo, res) {
             })
         }
         console.log({ userExists });
-        let idFound;
+        let idFound = address_id;
 
-        for (let i = 0; i < userExists.address.length; i++) {
-            if (userExists.address[i].name === addressDel.name &&
-                userExists.address[i].phoneNo === addressDel.phoneNo &&
-                userExists.address[i].myself === addressDel.myself &&
-                userExists.address[i].saveas === addressDel.saveas &&
-                userExists.address[i].fulladdr === addressDel.fulladdr &&
-                userExists.address[i].vehicle === addressDel.vehicle &&
-                userExists.address[i].vnumber === addressDel.vnumber
-            ) {
-                flag = true;
-                idFound = userExists.address[i]._id;
-                break;
-            }
-            console.log(userExists.address[i], "abbbbc");
-            // console.log(i);
-        }
-        if (flag === false) {
-            log.error(`Cannot find an address you entered ${addressDel}`);
-            return res.status(404).send({
-                message: 'Error in finding the given address'
-            })
-        }
 
-        // const result = await UserModel.findOneAndDelete({ phoneNo: phoneNo }, {
-        //     address: [{
-        //         _id: idFound
-        //     }]
-        // })
+
+
         const result = await UserModel.updateOne({ phoneNo: phoneNo },
             { $pull: { address: { _id: idFound } } },
             (err, response) => {

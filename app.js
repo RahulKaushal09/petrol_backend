@@ -4,6 +4,8 @@ const morgan = require('morgan');
 var cors = require('cors')
 const mongoose = require('mongoose');
 const cron = require('node-cron');
+const stripe = require('stripe')("sk_test_51ObmyHDN57vbqAvmK5bOHIztyaJ2NbK8fQB1Rr0X60bBvBfW77PdbOQZ3FGsj0pJUoinVMkjPrgzPkbD221EAzo900mGlIThIL");
+const endpointSecret = "whsec_017cba7b95a3b8bb1430949eacf56493b9900799f058be9cb9faa8c15eab5edb";
 
 const { updatedScheduleDao, createOrUpdateScheduleDao } = require('./Dao/order.dao')
 require('dotenv').config()
@@ -19,11 +21,21 @@ const whitelist = [
     '*'
 ];
 
-app.use(cors())
-app.use(express.json({ limit: "30mb", extended: true }));
+app.use((req, res, next) => {
+    if (req.path === '/order/webhook') {
+        express.raw({ type: 'application/json' })(req, res, next);
+    } else {
+        express.json({ limit: '30mb', extended: true })(req, res, next);
+    }
+});
+// app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 
 const bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
+// app.use(bodyParser.json({ limit: "30mb", extended: true }));
+// <-- Add this line
+app.use(cors());
 
 // some basic header for auth
 app.use(function (req, res, next) {
@@ -57,8 +69,6 @@ app.use('/driver', driverservicerouter);
 app.use('/fuel', fuelservicerouter);
 
 
-app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
-app.use(bodyParser.json({ limit: "30mb", extended: true }));
 
 
 // --------------------------> Checking for Deployment purposes <----------------------- // 

@@ -507,10 +507,12 @@ async function verifyOtpController(req, res) {
                     if (existingUser.address.length > 0) {
                         log.info(`address already exist! LoggedIn successfully`);
                         // console.log({ existingUser });
-                        return res.status(204).send({
-                            statusCode: 204,
+                        return res.status(201).send({
+                            statusCode: 201,
                             message: 'You have successfully logged In',
-                            token: jwtToken
+                            token: jwtToken,
+                            name: existingUser.name,
+                            address: existingUser.address[0]
                             // result: existingUser
                         });
                     }
@@ -519,7 +521,8 @@ async function verifyOtpController(req, res) {
                     return res.status(203).send({
                         statusCode: 203,
                         message: 'Please add Address',
-                        token: jwtToken
+                        token: jwtToken,
+                        name: existingUser.name
                         // result: existingUser
                     });
                 }
@@ -625,7 +628,7 @@ async function addAdressController(req, res) {
     try {
 
         console.log("checkpoint 1");
-        const result = await userDao.addAddressDao(loginInfo, res);
+        const result = await userDao.addAddressDao(req, res);
         return result;
     } catch (error) {
         log.error(`Error in adding new address ` + error)
@@ -640,11 +643,9 @@ async function addressDeleteController(req, res) {
     let { error } = userValidator.validateAddressDeleteSchema(loginInfo, res);
     if (isNotValidSchema(error, res)) return;
     try {
-        const token = req.header('x-auth-token');
-        const payload_jwt = jwt.verify(token, secretKey);
-        const phoneNo = payload_jwt.phoneNo;
+
         console.log("schema and validation check");
-        const result = await userDao.deleteAddressDao(phoneNo, loginInfo, res);
+        const result = await userDao.deleteAddressDao(req, res);
         return result;
     } catch (error) {
         log.error(`Error in deleting this address` + error);
