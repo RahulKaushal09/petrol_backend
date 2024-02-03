@@ -40,6 +40,9 @@ exports.handleWebhookEvent = async (request, response) => {
                 orderDetails = JSON.parse(orderDetail.OrderDetails);
                 token = orderDetail.token;
             }
+            const transactionId = session.payment_intent || session.payment_intent;
+            orderDetails.order.transactionId = transactionId;
+            // console.log(transactionId);
 
 
             break;

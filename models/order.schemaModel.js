@@ -27,12 +27,16 @@ const addOrderSchemaModel = {
     order: {
         fuelType: Joi.string().required(),
         fuelAmount: Joi.string().required(),
-        emergency: Joi.boolean(),
+        emergency: Joi.boolean().allow(''),
+        fullTank: Joi.boolean().allow(''),
         Date: Joi.date(),
-        preferredTiming: Joi.string(),
-        CoupanId: Joi.string(),
+        preferredTiming: Joi.string().allow(''),
+        CoupanId: Joi.string().allow(''),
         addressId: Joi.string().required(),
         status: Joi.string().required(),
+        paymentMethod: Joi.string().required(),
+
+
 
         // total amount after coupan
         // totalAmount: Joi.string().required()
@@ -46,13 +50,15 @@ const mongoOrderSchema = new mongoose.Schema({
         fuelType: String,
         fuelAmount: String,
         emergency: Boolean,
+        fullTank: Boolean,
         Date: Date,
         preferredTiming: String,
         CoupanId: String,
         addressId: String,
         status: String,
-        assignedTo: String,
-        totalAmount: String
+        paymentMethod: String,
+        paymentIntentId: String,
+        totalAmount: Number
 
     }],
 });

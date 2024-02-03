@@ -18,8 +18,9 @@ const log = new Logger('Order_Controller');
 const orderRouter = express.Router();
 
 // user
-orderRouter.get('/getOrders/:phoneNo', authTokenValidator, checkSystemStatusMiddleware, getAllOrdersController,);//working checked
-orderRouter.post('/addOrder', authTokenValidator, checkSystemStatusMiddleware, paymentBeforeOrderController);//working checked
+orderRouter.get('/getOrders/', authTokenValidator, checkSystemStatusMiddleware, getAllOrdersController,);//working checked
+orderRouter.post('/addOrder/onlinePayment', authTokenValidator, checkSystemStatusMiddleware, paymentBeforeOrderController);//working checked
+orderRouter.post('/addOrder/cod', authTokenValidator, checkSystemStatusMiddleware, addOrderController);//working checked
 // // getBy Id
 // // orderRouter.get('/getOrderById/:_adrId', getByIdController)
 

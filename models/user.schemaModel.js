@@ -118,7 +118,7 @@ const addAddressSchemaModel = {
         fulladdr: Joi.string().required().max(100),
         houseNo: Joi.string().required().max(50),
         area: Joi.string().required().max(100),
-        landmarks: Joi.string().max(100),
+        landmarks: Joi.string().max(100).allow(''),
         vehicle: Joi.string().required().max(50),
         vnumber: Joi.string().max(4).min(4).required(),
         lat: Joi.number().required().min(- 90).max(90).precision(10),

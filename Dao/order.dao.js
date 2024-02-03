@@ -10,8 +10,8 @@ const stripe = require('stripe')("sk_test_51ObmyHDN57vbqAvmK5bOHIztyaJ2NbK8fQB1R
 const jwt = require('jsonwebtoken')
 const secretKey = "123456789"
 
-async function getAllOrdersDao(orderInfo, res) {
-    const phoneNo = orderInfo.phoneNo;
+async function getAllOrdersDao(req, res) {
+    const phoneNo = req.phoneNo;
     console.log({ phoneNo });
     await orderModel.findOne({ phoneNo: phoneNo }, (err, response) => {
         console.log("checkpoint3");
@@ -19,7 +19,7 @@ async function getAllOrdersDao(orderInfo, res) {
             log.error(`Error in finding phoneNo ${phoneNo}` + err);
             return res.status(404).send({
                 phoneNo: phoneNo,
-                message: 'error in finding phone No ' + phoneNo
+                // message: 'error in finding phone No ' + phoneNo
             })
         }
         else if (!response) {
@@ -28,7 +28,7 @@ async function getAllOrdersDao(orderInfo, res) {
             return res.status(200).send({
                 statusCode: 200,
                 phoneNo: phoneNo,
-                message: 'No order with this ' + phoneNo + ' number found'
+                // message: 'No order with this ' + phoneNo + ' number found'
             })
         }
         else {
@@ -36,7 +36,7 @@ async function getAllOrdersDao(orderInfo, res) {
             return res.status(200).send({
                 statusCode: 200,
                 result: response,
-                message: `Found a order with phoneno ${phoneNo}`
+                // message: `Found a order with phoneno ${phoneNo}`
             })
         }
 
@@ -128,14 +128,17 @@ async function phoneExists(phoneNo) {
 async function paymentBeforeOrderDao(req, res) {
     try {
         const token = req.header('x-auth-token');
+
         const orderInfo = req.body
+        if (orderInfo.order.paymentMethod != "online") {
+            return res.status(400).send({
+                message: "Authentication Error",
+                statusCode: 400
+            })
+        }
         if (!orderInfo.order || !orderInfo.order.fuelAmount || isNaN(orderInfo.order.fuelAmount) || parseInt(orderInfo.order.fuelAmount) <= 0) {
             return res.status(400).json({ message: 'Invalid order total amount' });
         }
-
-
-
-
 
 
         // console.log({ orderInfo });
@@ -156,44 +159,271 @@ async function paymentBeforeOrderDao(req, res) {
         const schedules = await ScheduleModel.find({});
         let foundDate = false;
         let availableSlot;
-        for (let i = 0; i < 4; i++) {
-            console.log(schedules[0].schedule[i].showDate);
-            if (schedules[0].schedule[i].showDate == orderInfo.order.Date) {
-                // console.log("ok");
-                log.info("found the date available in the mongoDB ")
-                availableSlot = schedules[0].schedule[i];
-                foundDate = true;
-                break;
+        if (!orderInfo.order.emergency) {
+            for (let i = 0; i < 4; i++) {
+                console.log(schedules[0].schedule[i].showDate);
+                if (schedules[0].schedule[i].showDate == orderInfo.order.Date) {
+                    // console.log("ok");
+                    log.info("found the date available in the mongoDB ")
+                    availableSlot = schedules[0].schedule[i];
+                    foundDate = true;
+                    break;
 
+                }
+            };
+            if (foundDate == false) {
+                return res.status(404).send({
+                    message: 'Cannot find schedule for the specified date: ' + orderInfo.order.Date
+                });
             }
-        };
-        if (foundDate == false) {
-            return res.status(404).send({
-                message: 'Cannot find schedule for the specified date: ' + orderInfo.order.Date
-            });
+            else {
+
+                const fuelType = orderInfo.order.fuelType.toLowerCase(); // Convert to lowercase for case-insensitive comparison
+
+                // Find the slot for the preferred timing
+                const preferredSlot = availableSlot.slots.find(slot => slot.time === orderInfo.order.preferredTiming);
+
+                if (!preferredSlot) {
+                    return res.status(404).send({
+                        message: 'Cannot find a slot for the specified preferred timing: ' + orderInfo.order.preferredTiming
+                    });
+                }
+
+                // Check if the specified fuel type has available slots
+                if (preferredSlot[fuelType] >= 2) {
+                    return res.status(409).send({
+                        message: 'This slot is fully booked for ' + fuelType + ' fuel type.'
+                    });
+                }
+                log.info("The seletect slot is " + preferredSlot.time + " for fuel type " + fuelType)
+                // ***********************************************************************************
+                preferredSlot[fuelType] += 1;
+
+                let {
+                    _id,
+                    name,
+                    phoneNo,
+                    myself,
+                    saveas,
+                    fulladdr,
+                    vehicle,
+                    vnumber,
+                    totalAmount
+                } = "";
+                let flag = false;
+                async function searchAdrId() {
+                    payload.address.map((index) => {
+                        // console.log(index);
+                        // console.log(index._id, "dbId ", reqAdr);
+                        if (index._id == reqAdr) {
+                            _id = index._id;
+                            name = index.name;
+                            phoneNo = index.phoneNo;
+                            myself = index.myself;
+                            saveas = index.saveas;
+                            fulladdr = index.fulladdr;
+                            vehicle = index.vehicle;
+                            vnumber = index.vnumber;
+                            console.log("112233");
+                            flag = true;
+                        }
+                    })
+
+
+                }
+                console.log("map check");
+                searchAdrId();
+                if (flag === false) {
+                    log.error(`Cannot find a address this account`);
+                    return res.status(404).send({
+                        message: 'Please add a address first to make an order. Cannot find a address with this ID: ' + orderInfo.order.addressId
+                    })
+                }
+                else {
+                    // logic for coupan
+                    if (orderInfo.order.CoupanId) {
+                        await CoupanModel.findOne({ code: orderInfo.order.CoupanId }, async (err, response) => {
+                            if (err || !response) {
+                                // console.log({ response });
+                                return res.status(400).send({
+                                    message: 'Cannot find a coupan with this code'
+                                })
+                            }
+                            else {
+
+                                await FuelModel.find({}, async (e, fuelRates) => {
+                                    if (e || !fuelRates) {
+                                        // console.log(r);
+                                        log.error(`Error in finding fuel value` + e);
+                                        return res.status(400).send({
+                                            message: 'Error in finding fuel value'
+                                        })
+                                    }
+                                    else {
+                                        log.info(` fuel value entered`);
+                                        const fuelType = orderInfo.order.fuelType;
+                                        // Find the matching fuel rate based on fuelType
+                                        const matchingFuel = fuelRates[0]; // Assuming there is only one document in the result
+                                        let rate;
+                                        console.log(fuelRates);
+                                        if (matchingFuel) {
+                                            // Access the rate of the matching fuel type using matchingFuel[fuelType]
+                                            rate = matchingFuel[fuelType.toLowerCase()];
+
+                                            if (rate) {
+                                                console.log(`Fuel rate for ${fuelType}: ${rate}`);
+                                                // return res.send("ok");
+                                            } else {
+                                                console.log(`Rate for fuel type ${fuelType} not found in database`);
+                                                return res.status(404).send({
+                                                    message: `Rate for fuel type ${fuelType} not found!!`
+                                                });
+                                            }
+                                        } else {
+                                            console.log(`Fuel type ${fuelType} not found in database`);
+                                            return res.status(404).send({
+                                                message: `Fuel type ${fuelType} not found!!`
+                                            });
+                                        }
+
+                                        // rate = parseInt(rate);
+
+                                        // const Amount = parseInt(orderInfo.order.fuelAmount) * rate;
+                                        rate = parseFloat(rate);
+                                        let totalAmount = parseFloat(orderInfo.order.fuelAmount) * rate;
+                                        console.log(parseFloat(orderInfo.order.fuelAmount));
+                                        // console.log({ totalAmount });
+                                        const discount = response.discount;
+                                        const temp = parseFloat(discount);
+                                        // console.log(parseInt(orderInfo.order.fuelAmount));
+                                        totalAmount = ((100 - temp) / 100) * totalAmount;
+                                        console.log({ totalAmount });
+                                        if (orderInfo.order.emergency == true) {
+                                            totalAmount = totalAmount + 20;
+                                        }
+
+
+
+
+                                        // payment
+                                        const session = await stripe.checkout.sessions.create({
+                                            payment_method_types: ['card'],
+                                            // customer_email: "hey@gmail.com",
+
+                                            line_items: {
+                                                price_data: {
+                                                    currency: 'cad',
+                                                    product_data: {
+                                                        name: fuelType,
+                                                    },
+                                                    unit_amount: totalAmount * 100,
+                                                },
+                                                quantity: 1,
+                                            },
+                                            mode: 'payment',
+                                            success_url: 'http://localhost:8100/success', // Redirect after successful payment
+                                            cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
+                                            metadata: {
+                                                token: token,
+                                                OrderDetails: orderInfo,
+                                            },
+                                        });
+                                        res.json({ id: session.url });
+                                    }
+                                })
+
+
+
+
+                            }
+                        })
+                    }
+
+                    else {
+                        await FuelModel.find({}, async (e, fuelRates) => {
+                            if (e || !fuelRates) {
+                                // console.log(r);
+                                log.error(`Error in finding fuel value` + e);
+                                return res.status(400).send({
+                                    message: 'Error in finding fuel value'
+                                })
+                            }
+                            else {
+                                const fuelType = orderInfo.order.fuelType;
+
+                                // Find the matching fuel rate based on fuelType
+                                const matchingFuel = fuelRates[0]; // Assuming there is only one document in the result
+                                let rate;
+                                if (matchingFuel) {
+                                    // Access the rate of the matching fuel type using matchingFuel[fuelType]
+                                    rate = matchingFuel[fuelType.toLowerCase()];
+
+                                    if (rate) {
+                                        console.log(`Fuel rate for ${fuelType}: ${rate}`);
+                                        // return res.send("ok");
+                                    } else {
+                                        console.log(`Rate for fuel type ${fuelType} not found in database`);
+                                        return res.status(404).send({
+                                            message: `Rate for fuel type ${fuelType} not found in database`
+                                        });
+                                    }
+                                } else {
+                                    console.log(`Fuel type ${fuelType} not found in database`);
+                                    return res.status(404).send({
+                                        message: `Fuel type ${fuelType} not found in database`
+                                    });
+                                }
+
+                                // rate = parseInt(rate);
+
+                                // const totalAmount = parseInt(orderInfo.order.fuelAmount) * rate;
+                                // rate = parseFloat(rate);
+                                rate = parseFloat(rate.replace('$', ''));
+                                let totalAmount = parseFloat(orderInfo.order.fuelAmount) * rate;
+
+                                // console.log(parseInt(orderInfo.order.fuelAmount));
+                                console.log({ rate });
+                                console.log(parseFloat(orderInfo.order.fuelAmount)
+                                );
+                                console.log({ totalAmount });
+                                if (orderInfo.order.emergency == true) {
+                                    totalAmount = totalAmount + 20;
+                                }
+                                // PAYMENT
+
+                                const session = await stripe.checkout.sessions.create({
+                                    payment_method_types: ['card'],
+                                    // customer_email: "hey@gmail.com",
+
+                                    line_items: [{
+                                        price_data: {
+                                            currency: 'cad',
+                                            product_data: {
+                                                name: fuelType,
+                                            },
+                                            unit_amount: totalAmount * 100,
+                                        },
+                                        quantity: 1,
+                                    }],
+                                    mode: 'payment',
+                                    success_url: 'http://localhost:8100/user/home', // Redirect after successful payment
+                                    cancel_url: 'http://localhost:8100/user/cancel',   // Redirect on cancellation
+                                    metadata: {
+                                        token: token,
+                                        OrderDetails: JSON.stringify(orderInfo),
+                                    },
+                                });
+                                res.status(200).send({ message: "Please pay Online", id: session.url, statusCode: 200 });
+
+                            }
+                        })
+
+                    }
+                }
+            }
         }
         else {
-
             const fuelType = orderInfo.order.fuelType.toLowerCase(); // Convert to lowercase for case-insensitive comparison
-
-            // Find the slot for the preferred timing
-            const preferredSlot = availableSlot.slots.find(slot => slot.time === orderInfo.order.preferredTiming);
-
-            if (!preferredSlot) {
-                return res.status(404).send({
-                    message: 'Cannot find a slot for the specified preferred timing: ' + orderInfo.order.preferredTiming
-                });
-            }
-
-            // Check if the specified fuel type has available slots
-            if (preferredSlot[fuelType] >= 2) {
-                return res.status(409).send({
-                    message: 'This slot is fully booked for ' + fuelType + ' fuel type.'
-                });
-            }
-            log.info("The seletect slot is " + preferredSlot.time + " for fuel type " + fuelType)
-            // ***********************************************************************************
-            preferredSlot[fuelType] += 1;
 
             let {
                 _id,
@@ -282,17 +512,21 @@ async function paymentBeforeOrderDao(req, res) {
                                         });
                                     }
 
-                                    rate = parseInt(rate);
+                                    // rate = parseInt(rate);
 
-                                    const Amount = parseInt(orderInfo.order.fuelAmount) * rate;
-
-                                    console.log(parseInt(orderInfo.order.fuelAmount));
+                                    // const Amount = parseInt(orderInfo.order.fuelAmount) * rate;
+                                    rate = parseFloat(rate);
+                                    let totalAmount = parseFloat(orderInfo.order.fuelAmount) * rate;
+                                    console.log(parseFloat(orderInfo.order.fuelAmount));
                                     // console.log({ totalAmount });
                                     const discount = response.discount;
-                                    const temp = parseInt(discount);
+                                    const temp = parseFloat(discount);
                                     // console.log(parseInt(orderInfo.order.fuelAmount));
-                                    totalAmount = ((100 - temp) / 100) * parseInt(Amount);
+                                    totalAmount = ((100 - temp) / 100) * totalAmount;
                                     console.log({ totalAmount });
+                                    if (orderInfo.order.emergency == true) {
+                                        totalAmount = totalAmount + 20;
+                                    }
 
 
 
@@ -308,9 +542,9 @@ async function paymentBeforeOrderDao(req, res) {
                                                 product_data: {
                                                     name: fuelType,
                                                 },
-                                                unit_amount: totalAmount,
+                                                unit_amount: totalAmount * 100,
                                             },
-                                            quantity: parseInt(orderInfo.order.fuelAmount) + "L",
+                                            quantity: 1,
                                         },
                                         mode: 'payment',
                                         success_url: 'http://localhost:8100/success', // Redirect after successful payment
@@ -366,17 +600,26 @@ async function paymentBeforeOrderDao(req, res) {
                                 });
                             }
 
-                            rate = parseInt(rate);
+                            // rate = parseInt(rate);
 
-                            const totalAmount = parseInt(orderInfo.order.fuelAmount) * rate;
+                            // const totalAmount = parseInt(orderInfo.order.fuelAmount) * rate;
+                            // rate = parseFloat(rate);
+                            rate = parseFloat(rate.replace('$', ''));
+                            let totalAmount = parseFloat(orderInfo.order.fuelAmount) * rate;
 
-                            console.log(parseInt(orderInfo.order.fuelAmount));
+                            // console.log(parseInt(orderInfo.order.fuelAmount));
+                            console.log({ rate });
+                            console.log(parseFloat(orderInfo.order.fuelAmount)
+                            );
                             console.log({ totalAmount });
+                            if (orderInfo.order.emergency == true) {
+                                totalAmount = totalAmount + 20;
+                            }
                             // PAYMENT
 
                             const session = await stripe.checkout.sessions.create({
                                 payment_method_types: ['card'],
-                                customer_email: "hey@gmail.com",
+                                // customer_email: "hey@gmail.com",
 
                                 line_items: [{
                                     price_data: {
@@ -384,24 +627,25 @@ async function paymentBeforeOrderDao(req, res) {
                                         product_data: {
                                             name: fuelType,
                                         },
-                                        unit_amount: totalAmount,
+                                        unit_amount: totalAmount * 100,
                                     },
-                                    quantity: parseInt(orderInfo.order.fuelAmount),
+                                    quantity: 1,
                                 }],
                                 mode: 'payment',
-                                success_url: 'http://localhost:8100/success', // Redirect after successful payment
-                                cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
+                                success_url: 'http://localhost:8100/user/home', // Redirect after successful payment
+                                cancel_url: 'http://localhost:8100/user/cancel',   // Redirect on cancellation
                                 metadata: {
                                     token: token,
                                     OrderDetails: JSON.stringify(orderInfo),
                                 },
                             });
-                            res.json({ id: session.url });
+                            res.status(200).send({ message: "Please pay Online", id: session.url, statusCode: 200 });
 
                         }
                     })
 
                 }
+
             }
         }
 
@@ -436,50 +680,561 @@ async function addOrderDao(token, order) {
         const schedules = await ScheduleModel.find({});
         let foundDate = false;
         let availableSlot;
-        for (let i = 0; i < 4; i++) {
-            console.log(schedules[0].schedule[i].showDate);
-            if (schedules[0].schedule[i].showDate == order.Date) {
-                // console.log("ok");
-                log.info("found the date available in the mongoDB ")
-                availableSlot = schedules[0].schedule[i];
-                foundDate = true;
-                break;
+        if (!order.emergency) {
+            for (let i = 0; i < 4; i++) {
+                console.log(schedules[0].schedule[i].showDate);
+                if (schedules[0].schedule[i].showDate == order.Date) {
+                    // console.log("ok");
+                    log.info("found the date available in the mongoDB ")
+                    availableSlot = schedules[0].schedule[i];
+                    foundDate = true;
+                    break;
 
+                }
+            };
+            if (foundDate == false) {
+                log.error('Cannot find schedule for the specified date: ' + order.Date)
+                return false;
+                // return res.status(404).send({
+                //     message: 'Cannot find schedule for the specified date: ' + order.Date
+                // });
             }
-        };
-        if (foundDate == false) {
-            log.error('Cannot find schedule for the specified date: ' + order.Date)
+            else {
 
-            // return res.status(404).send({
-            //     message: 'Cannot find schedule for the specified date: ' + order.Date
-            // });
+                const fuelType = order.fuelType.toLowerCase(); // Convert to lowercase for case-insensitive comparison
+
+                // Find the slot for the preferred timing
+                const preferredSlot = availableSlot.slots.find(slot => slot.time === order.preferredTiming);
+
+                if (!preferredSlot) {
+                    log.error('Cannot find a slot for the specified preferred timing: ' + order.preferredTiming)
+                    return false;
+                    // return res.status(404).send({
+                    //     message: 'Cannot find a slot for the specified preferred timing: ' + order.preferredTiming
+                    // });
+                }
+
+                // Check if the specified fuel type has available slots
+                if (preferredSlot[fuelType] >= 2) {
+                    log.error('This slot is fully booked for ' + fuelType + ' fuel type.')
+                    return false;
+                    // return res.status(409).send({
+                    //     message: 'This slot is fully booked for ' + fuelType + ' fuel type.'
+                    // });
+                }
+                log.info("The seletect slot is " + preferredSlot.time + " for fuel type " + fuelType)
+                // ***********************************************************************************
+                preferredSlot[fuelType] += 1;
+
+                let {
+                    _id,
+                    name,
+                    phoneNo,
+                    myself,
+                    saveas,
+                    fulladdr,
+                    vehicle,
+                    vnumber,
+                    totalAmount
+                } = "";
+                let flag = false;
+                async function searchAdrId() {
+                    payload.address.map((index) => {
+                        // console.log(index);
+                        // console.log(index._id, "dbId ", reqAdr);
+                        if (index._id == reqAdr) {
+                            _id = index._id;
+                            name = index.name;
+                            phoneNo = index.phoneNo;
+                            myself = index.myself;
+                            saveas = index.saveas;
+                            fulladdr = index.fulladdr;
+                            vehicle = index.vehicle;
+                            vnumber = index.vnumber;
+                            console.log("112233");
+                            flag = true;
+                        }
+                    })
+
+
+                }
+                console.log("map check");
+                searchAdrId();
+                if (flag === false) {
+                    log.error(`Cannot find a address this account`);
+                    log.error('Please add a address first to make an order. Cannot find a address with this ID: ' + order.addressId)
+                    return false;
+
+                }
+                else {
+                    // logic for coupan
+                    if (order.CoupanId) {
+                        await CoupanModel.findOne({ code: order.CoupanId }, async (err, response) => {
+                            if (err || !response) {
+                                // console.log({ response });
+                                log.error('Cannot find a coupan with this code')
+                                return false;
+                                // return res.status(400).send({
+                                //     message: 'Cannot find a coupan with this code'
+                                // })
+                            }
+                            else {
+
+                                await FuelModel.find({}, async (e, fuelRates) => {
+                                    if (e || !fuelRates) {
+                                        // console.log(r);
+                                        log.error(`Error in finding fuel value` + e);
+                                        // return res.status(400).send({
+                                        //     message: 'Error in finding fuel value'
+                                        // })
+                                        return false;
+                                    }
+                                    else {
+                                        log.info(` fuel value entered`);
+                                        const fuelType = order.fuelType;
+                                        // Find the matching fuel rate based on fuelType
+                                        const matchingFuel = fuelRates[0]; // Assuming there is only one document in the result
+                                        let rate;
+                                        console.log(fuelRates);
+                                        if (matchingFuel) {
+                                            // Access the rate of the matching fuel type using matchingFuel[fuelType]
+                                            rate = matchingFuel[fuelType.toLowerCase()];
+
+                                            if (rate) {
+                                                console.log(`Fuel rate for ${fuelType}: ${rate}`);
+                                                // return res.send("ok");
+                                            } else {
+                                                console.log(`Rate for fuel type ${fuelType} not found in database`);
+                                                // return res.status(404).send({
+                                                //     message: `Rate for fuel type ${fuelType} not found in database`
+                                                // });
+                                            }
+                                        } else {
+                                            console.log(`Fuel type ${fuelType} not found in database`);
+                                            // return res.status(404).send({
+                                            //     message: `Fuel type ${fuelType} not found in database`
+                                            // });
+                                        }
+
+                                        // rate = parseInt(rate);
+
+                                        // const Amount = parseInt(order.fuelAmount) * rate;
+                                        // rate = parseFloat(rate);
+                                        rate = parseFloat(rate.replace('$', ''));
+                                        let totalAmount = parseFloat(order.fuelAmount) * rate;
+
+                                        console.log(parseFloat(order.fuelAmount));
+                                        // console.log({ totalAmount });
+                                        const discount = response.discount;
+                                        const temp = parseFloat(discount);
+                                        // console.log(parseInt(order.fuelAmount));
+                                        totalAmount = ((100 - temp) / 100) * totalAmount;
+                                        console.log({ totalAmount });
+                                        if (order.emergency == true) {
+                                            totalAmount = totalAmount + 20;
+                                        }
+
+                                        // PAYMENT DONE order satrted
+
+                                        let orderDetails = await orderModel.findOne({ phoneNo: phoneNo });
+                                        // console.log({ orderDetails });
+                                        let index = 0;
+                                        // console.log({ index });
+                                        if (orderDetails) {
+                                            index = orderDetails.order.length;
+                                        }
+                                        let newOrder;
+                                        if (order.fullTank == true) {
+                                            newOrder = {
+                                                "fuelType": order.fuelType,
+                                                "fuelAmount": order.fuelAmount,
+                                                "emergency": order.emergency,
+                                                "fullTank": order.fullTank,
+                                                "Date": order.Date,
+                                                "preferredTiming": order.preferredTiming,
+                                                "CoupanId": order.CoupanId,
+                                                "addressId": order.addressId,
+                                                "status": order.status,
+                                                "paymentMethod": order.paymentMethod,
+                                                "paymentIntentId": "cod",
+                                                "totalAmount": -1
+                                            };
+                                        }
+                                        else {
+                                            newOrder = {
+                                                "fuelType": order.fuelType,
+                                                "fuelAmount": order.fuelAmount,
+                                                "emergency": order.emergency,
+                                                "fullTank": order.fullTank,
+                                                "Date": order.Date,
+                                                "preferredTiming": order.preferredTiming,
+                                                "CoupanId": order.CoupanId,
+                                                "addressId": order.addressId,
+                                                "status": order.status,
+                                                "paymentMethod": order.paymentMethod,
+                                                "paymentIntentId": "cod",
+                                                "totalAmount": totalAmount
+                                            };
+                                        }
+
+                                        if (order.transactionId) {
+                                            newOrder.paymentIntentId = order.transactionId;
+                                        }
+                                        if (index === 0) {
+                                            const newOrderDocument = new orderModel({
+                                                "phoneNo": phoneNo,
+                                                "order": [newOrder]
+                                            });
+
+                                            try {
+                                                console.log(newOrder);
+                                                const result = await newOrderDocument.save(async (err, result) => {
+                                                    if (err) {
+                                                        log.error(`Error in adding first order for phoneNo ${phoneNo}: ` + err);
+                                                        // return res.status(500).send({
+                                                        //     message: 'phoneNo ' + phone + ' Error in saving first order.'
+                                                        // });
+                                                        return false;
+                                                    }
+                                                    else {
+
+                                                        await ScheduleModel.findOneAndUpdate(
+                                                            { "schedule.showDate": order.Date },
+                                                            { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
+                                                            {
+                                                                arrayFilters: [
+                                                                    { "outer.showDate": order.Date },
+                                                                    { "inner.time": preferredSlot.time }
+                                                                ],
+                                                                new: true
+                                                            },
+                                                            (error, updatedDocument) => {
+                                                                if (error) {
+                                                                    log.error('Error updating schedule:', error);
+                                                                    // Handle the error as needed
+                                                                    return false;
+                                                                } else {
+                                                                    log.info('Schedule updated successfully:', updatedDocument);
+                                                                    // Continue with any additional logic if needed
+                                                                }
+                                                            }
+                                                        );
+                                                        log.info(result.phoneNo + ' has just ordered for the first time!');
+                                                        log.info('Your first order is queued successfully.');
+                                                        // return res.status(200).send({
+                                                        //     statusCode: 200,
+                                                        //     message: 'Your first order is queued successfully.',
+                                                        //     phoneNo: result.phoneNo
+                                                        // });
+
+                                                    }
+                                                });
+                                                // console.log("11");
+                                                return result;
+                                                // const result = await newOrderDocument.save();
+
+                                                // Update schedule here if needed
+
+                                                // return result;
+                                            } catch (err) {
+                                                log.error(`Error in adding first order for phoneNo ${phoneNo}: ` + err);
+                                                return false;
+                                            }
+                                        } else {
+                                            try {
+                                                const check = orderDetails.order;
+                                                check.push(newOrder)
+                                                console.log(newOrder);
+                                                const result = await orderModel.findOneAndUpdate(
+                                                    { phoneNo: phoneNo },
+                                                    { $set: { order: check } },
+                                                    { new: true, upsert: true }
+                                                    , async (err, response) => {
+                                                        console.log("updatePoint");
+                                                        if (err || !response) {
+                                                            console.log(response);
+                                                            log.error(`Error in adding new order` + err);
+                                                            // return res.status(400).send({
+                                                            //     message: 'Error in adding new order'
+                                                            // })
+                                                            return false;
+                                                        }
+                                                        else {
+                                                            await ScheduleModel.findOneAndUpdate(
+                                                                { "schedule.showDate": order.Date },
+                                                                { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
+                                                                {
+                                                                    arrayFilters: [
+                                                                        { "outer.showDate": order.Date },
+                                                                        { "inner.time": preferredSlot.time }
+                                                                    ],
+                                                                    new: true
+                                                                },
+                                                                (error, updatedDocument) => {
+                                                                    if (error) {
+                                                                        log.error('Error updating schedule:', error);
+                                                                        // Handle the error as needed
+                                                                        return false;
+                                                                    } else {
+                                                                        log.info('Schedule updated successfully:', updatedDocument);
+                                                                        // Continue with any additional logic if needed
+                                                                    }
+                                                                }
+                                                            );
+                                                            log.info(`Sucessfully added new order in the order array to phoneNo ${phoneNo}`);
+                                                            // return res.status(200).send({
+                                                            //     statusCode: 200,
+                                                            //     message: 'Successfully added new order',
+                                                            // })
+
+                                                        }
+
+                                                    })
+                                                return result;
+
+                                            } catch (err) {
+                                                log.error(`Error in adding new order` + err);
+                                                return false;
+                                            }
+                                        }
+
+                                    }
+                                })
+
+
+
+
+                            }
+                        })
+                    }
+
+                    else {
+                        await FuelModel.find({}, async (e, fuelRates) => {
+                            if (e || !fuelRates) {
+                                // console.log(r);
+                                log.error(`Error in finding fuel value` + e);
+                                return false;
+                                // return res.status(400).send({
+                                //     message: 'Error in finding fuel value'
+                                // })
+                            }
+                            else {
+                                const fuelType = order.fuelType;
+
+                                // Find the matching fuel rate based on fuelType
+                                const matchingFuel = fuelRates[0]; // Assuming there is only one document in the result
+                                let rate;
+                                if (matchingFuel) {
+                                    // Access the rate of the matching fuel type using matchingFuel[fuelType]
+                                    rate = matchingFuel[fuelType.toLowerCase()];
+
+                                    if (rate) {
+                                        console.log(`Fuel rate for ${fuelType}: ${rate}`);
+                                        // return res.send("ok");
+                                    } else {
+                                        console.log(`Rate for fuel type ${fuelType} not found in database`);
+                                        // return res.status(404).send({
+                                        //     message: `Rate for fuel type ${fuelType} not found in database`
+                                        // });
+                                    }
+                                } else {
+                                    console.log(`Fuel type ${fuelType} not found in database`);
+                                    // return res.status(404).send({
+                                    //     message: `Fuel type ${fuelType} not found in database`
+                                    // });
+                                }
+
+                                // rate = parseInt(rate);
+
+                                // const totalAmount = parseInt(order.fuelAmount) * rate;
+                                rate = parseFloat(rate.replace('$', ''));
+                                //  console.log(rate);
+                                let totalAmount = parseFloat(order.fuelAmount) * rate;
+
+                                console.log(parseInt(order.fuelAmount));
+                                console.log({ totalAmount });
+                                if (order.emergency == true) {
+                                    totalAmount = totalAmount + 20;
+                                }
+
+
+                                let orderDetails = await orderModel.findOne({ phoneNo: phoneNo });
+                                // console.log({ orderDetails });
+                                let index = 0;
+                                // console.log({ index });
+                                if (orderDetails) {
+                                    index = orderDetails.order.length;
+                                }
+                                let newOrder;
+                                if (order.fullTank == true) {
+                                    newOrder = {
+                                        "fuelType": order.fuelType,
+                                        "fuelAmount": order.fuelAmount,
+                                        "emergency": order.emergency,
+                                        "fullTank": order.fullTank,
+                                        "Date": order.Date,
+                                        "preferredTiming": order.preferredTiming,
+                                        "CoupanId": order.CoupanId,
+                                        "addressId": order.addressId,
+                                        "status": order.status,
+                                        "paymentMethod": order.paymentMethod,
+                                        "paymentIntentId": "cod",
+                                        "totalAmount": -1
+                                    };
+                                }
+                                else {
+                                    newOrder = {
+                                        "fuelType": order.fuelType,
+                                        "fuelAmount": order.fuelAmount,
+                                        "emergency": order.emergency,
+                                        "fullTank": order.fullTank,
+                                        "Date": order.Date,
+                                        "preferredTiming": order.preferredTiming,
+                                        "CoupanId": order.CoupanId,
+                                        "addressId": order.addressId,
+                                        "status": order.status,
+                                        "paymentMethod": order.paymentMethod,
+                                        "paymentIntentId": "cod",
+                                        "totalAmount": totalAmount
+                                    };
+                                }
+                                if (order.transactionId) {
+                                    newOrder.paymentIntentId = order.transactionId;
+                                }
+                                if (index === 0) {
+                                    const newOrderDocument = new orderModel({
+                                        "phoneNo": phoneNo,
+                                        "order": [newOrder]
+                                    });
+
+                                    try {
+                                        console.log(newOrder);
+                                        const result = await newOrderDocument.save(async (err, result) => {
+                                            if (err) {
+                                                log.error(`Error in adding first order for phoneNo ${phoneNo}: ` + err);
+                                                // return res.status(500).send({
+                                                //     message: 'phoneNo ' + phone + ' Error in saving first order.'
+                                                // });
+                                                return false;
+                                            }
+                                            else {
+
+                                                await ScheduleModel.findOneAndUpdate(
+                                                    { "schedule.showDate": order.Date },
+                                                    { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
+                                                    {
+                                                        arrayFilters: [
+                                                            { "outer.showDate": order.Date },
+                                                            { "inner.time": preferredSlot.time }
+                                                        ],
+                                                        new: true
+                                                    },
+                                                    (error, updatedDocument) => {
+                                                        if (error) {
+                                                            log.error('Error updating schedule:', error);
+                                                            // Handle the error as needed
+                                                            return false;
+                                                        } else {
+                                                            log.info('Schedule updated successfully:', updatedDocument);
+                                                            // Continue with any additional logic if needed
+                                                        }
+                                                    }
+                                                );
+                                                log.info(result.phoneNo + ' has just ordered for the first time!');
+                                                log.info('Your first order is queued successfully.');
+                                                // return res.status(200).send({
+                                                //     statusCode: 200,
+                                                //     message: 'Your first order is queued successfully.',
+                                                //     phoneNo: result.phoneNo
+                                                // });
+
+                                            }
+                                        });
+                                        // console.log("11");
+                                        return result;
+                                        // const result = await newOrderDocument.save();
+
+                                        // Update schedule here if needed
+
+                                        // return result;
+                                    } catch (err) {
+                                        log.error(`Error in adding first order for phoneNo ${phoneNo}: ` + err);
+                                        return false;
+                                    }
+                                } else {
+                                    try {
+
+                                        const check = orderDetails.order;
+                                        check.push(newOrder)
+                                        console.log(newOrder);
+                                        const result = await orderModel.findOneAndUpdate(
+                                            { phoneNo: phoneNo },
+                                            { $set: { order: check } },
+                                            { new: true, upsert: true }
+                                            , async (err, response) => {
+                                                console.log("updatePoint");
+                                                if (err || !response) {
+                                                    console.log(response);
+                                                    log.error(`Error in adding new order` + err);
+                                                    // return res.status(400).send({
+                                                    //     message: 'Error in adding new order'
+                                                    // })
+                                                    return false;
+                                                }
+                                                else {
+                                                    await ScheduleModel.findOneAndUpdate(
+                                                        { "schedule.showDate": order.Date },
+                                                        { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
+                                                        {
+                                                            arrayFilters: [
+                                                                { "outer.showDate": order.Date },
+                                                                { "inner.time": preferredSlot.time }
+                                                            ],
+                                                            new: true
+                                                        },
+                                                        (error, updatedDocument) => {
+                                                            if (error) {
+                                                                log.error('Error updating schedule:', error);
+                                                                // Handle the error as needed
+                                                                return false;
+                                                            } else {
+                                                                log.info('Schedule updated successfully:', updatedDocument);
+                                                                // Continue with any additional logic if needed
+                                                            }
+                                                        }
+                                                    );
+                                                    log.info(`Sucessfully added new order in the order array to phoneNo ${phoneNo}`);
+                                                    // return res.status(200).send({
+                                                    //     statusCode: 200,
+                                                    //     message: 'Successfully added new order',
+                                                    // })
+
+                                                }
+
+                                            })
+                                        return result;
+
+                                    } catch (err) {
+                                        log.error(`Error in adding new order` + err);
+                                        return false;
+                                    }
+                                }
+
+
+
+                            }
+                        })
+
+                    }
+                }
+            }
         }
         else {
 
+
+
             const fuelType = order.fuelType.toLowerCase(); // Convert to lowercase for case-insensitive comparison
 
-            // Find the slot for the preferred timing
-            const preferredSlot = availableSlot.slots.find(slot => slot.time === order.preferredTiming);
-
-            if (!preferredSlot) {
-                log.error('Cannot find a slot for the specified preferred timing: ' + order.preferredTiming)
-
-                // return res.status(404).send({
-                //     message: 'Cannot find a slot for the specified preferred timing: ' + order.preferredTiming
-                // });
-            }
-
-            // Check if the specified fuel type has available slots
-            if (preferredSlot[fuelType] >= 2) {
-                log.error('This slot is fully booked for ' + fuelType + ' fuel type.')
-
-                // return res.status(409).send({
-                //     message: 'This slot is fully booked for ' + fuelType + ' fuel type.'
-                // });
-            }
-            log.info("The seletect slot is " + preferredSlot.time + " for fuel type " + fuelType)
-            // ***********************************************************************************
-            preferredSlot[fuelType] += 1;
 
             let {
                 _id,
@@ -518,10 +1273,8 @@ async function addOrderDao(token, order) {
             if (flag === false) {
                 log.error(`Cannot find a address this account`);
                 log.error('Please add a address first to make an order. Cannot find a address with this ID: ' + order.addressId)
+                return false;
 
-                // return res.status(404).send({
-                //     message: 'Please add a address first to make an order. Cannot find a address with this ID: ' + order.addressId
-                // })
             }
             else {
                 // logic for coupan
@@ -530,7 +1283,7 @@ async function addOrderDao(token, order) {
                         if (err || !response) {
                             // console.log({ response });
                             log.error('Cannot find a coupan with this code')
-
+                            return false;
                             // return res.status(400).send({
                             //     message: 'Cannot find a coupan with this code'
                             // })
@@ -544,6 +1297,7 @@ async function addOrderDao(token, order) {
                                     // return res.status(400).send({
                                     //     message: 'Error in finding fuel value'
                                     // })
+                                    return false;
                                 }
                                 else {
                                     log.info(` fuel value entered`);
@@ -572,17 +1326,23 @@ async function addOrderDao(token, order) {
                                         // });
                                     }
 
-                                    rate = parseInt(rate);
+                                    // rate = parseInt(rate);
 
-                                    const Amount = parseInt(order.fuelAmount) * rate;
+                                    // const Amount = parseInt(order.fuelAmount) * rate;
+                                    // rate = parseFloat(rate);
+                                    rate = parseFloat(rate.replace('$', ''));
+                                    let totalAmount = parseFloat(order.fuelAmount) * rate;
 
-                                    console.log(parseInt(order.fuelAmount));
+                                    console.log(parseFloat(order.fuelAmount));
                                     // console.log({ totalAmount });
                                     const discount = response.discount;
-                                    const temp = parseInt(discount);
+                                    const temp = parseFloat(discount);
                                     // console.log(parseInt(order.fuelAmount));
-                                    totalAmount = ((100 - temp) / 100) * parseInt(Amount);
+                                    totalAmount = ((100 - temp) / 100) * totalAmount;
                                     console.log({ totalAmount });
+                                    if (order.emergency == true) {
+                                        totalAmount = totalAmount + 20;
+                                    }
 
                                     // PAYMENT DONE order satrted
 
@@ -593,113 +1353,161 @@ async function addOrderDao(token, order) {
                                     if (orderDetails) {
                                         index = orderDetails.order.length;
                                     }
-                                    if (index === 0) {
-                                        let newOrder = new orderModel({
-                                            "phoneNo": phoneNo,
-                                            "order": {
-                                                "fuelType": order.fuelType,
-                                                "fuelAmount": order.fuelAmount,
-                                                "emergency": order.emergency,
-                                                "Date": order.Date,
-                                                "preferredTiming": order.preferredTiming,
-                                                "CoupanId": order.CoupanId,
-                                                "addressId": order.addressId,
-                                                "status": order.status,
-
-                                                "totalAmount": totalAmount
-                                            }
-                                        });
-
-                                        const result = await newOrder.save(async (err, result) => {
-                                            if (err) {
-                                                log.error(`Error in adding first order for phoneNo ${phoneNo}: ` + err);
-                                                // return res.status(500).send({
-                                                //     message: 'phoneNo ' + phone + ' Error in saving first order.'
-                                                // });
-                                            }
-                                            else {
-
-                                                await ScheduleModel.findOneAndUpdate(
-                                                    { "schedule.showDate": order.Date },
-                                                    { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
-                                                    {
-                                                        arrayFilters: [
-                                                            { "outer.showDate": order.Date },
-                                                            { "inner.time": preferredSlot.time }
-                                                        ],
-                                                        new: true
-                                                    },
-                                                    (error, updatedDocument) => {
-                                                        if (error) {
-                                                            log.error('Error updating schedule:', error);
-                                                            // Handle the error as needed
-                                                        } else {
-                                                            log.info('Schedule updated successfully:', updatedDocument);
-                                                            // Continue with any additional logic if needed
-                                                        }
-                                                    }
-                                                );
-                                                log.info(result.phoneNo + ' has just ordered for the first time!');
-                                                log.info('Your first order is queued successfully.');
-                                                // return res.status(200).send({
-                                                //     statusCode: 200,
-                                                //     message: 'Your first order is queued successfully.',
-                                                //     phoneNo: result.phoneNo
-                                                // });
-
-                                            }
-                                        });
-                                        // console.log("11");
-                                        return result;
+                                    let newOrder;
+                                    if (order.fullTank == true) {
+                                        newOrder = {
+                                            "fuelType": order.fuelType,
+                                            "fuelAmount": order.fuelAmount,
+                                            "emergency": order.emergency,
+                                            "fullTank": order.fullTank,
+                                            // "Date": order.Date,
+                                            // "preferredTiming": order.preferredTiming,
+                                            "CoupanId": order.CoupanId,
+                                            "addressId": order.addressId,
+                                            "status": order.status,
+                                            "paymentMethod": order.paymentMethod,
+                                            "paymentIntentId": "cod",
+                                            "totalAmount": -1
+                                        };
                                     }
                                     else {
-                                        // console.log(orderDetails.order, "aaaaa");
-                                        Order = { ...Order, "totalAmount": totalAmount };
-                                        console.log({ Order });
-                                        const check = orderDetails.order;
-                                        check.push(Order)
-                                        // console.log({ check });
-                                        const result = await orderModel.findOneAndUpdate({ phoneNo: phoneNo }, { order: check }, { new: true, upsert: true }, async (err, response) => {
-                                            console.log("updatePoint");
-                                            if (err || !response) {
-                                                console.log(response);
-                                                log.error(`Error in adding new order` + err);
-                                                // return res.status(400).send({
-                                                //     message: 'Error in adding new order'
-                                                // })
-                                            }
-                                            else {
-                                                await ScheduleModel.findOneAndUpdate(
-                                                    { "schedule.showDate": order.Date },
-                                                    { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
-                                                    {
-                                                        arrayFilters: [
-                                                            { "outer.showDate": order.Date },
-                                                            { "inner.time": preferredSlot.time }
-                                                        ],
-                                                        new: true
-                                                    },
-                                                    (error, updatedDocument) => {
-                                                        if (error) {
-                                                            log.error('Error updating schedule:', error);
-                                                            // Handle the error as needed
-                                                        } else {
-                                                            log.info('Schedule updated successfully:', updatedDocument);
-                                                            // Continue with any additional logic if needed
-                                                        }
-                                                    }
-                                                );
-                                                log.info(`Sucessfully added new order in the order array to phoneNo ${phoneNo}`);
-                                                // return res.status(200).send({
-                                                //     statusCode: 200,
-                                                //     message: 'Successfully added new order',
-                                                // })
-
-                                            }
-
-                                        })
-                                        return result;
+                                        newOrder = {
+                                            "fuelType": order.fuelType,
+                                            "fuelAmount": order.fuelAmount,
+                                            "emergency": order.emergency,
+                                            "fullTank": order.fullTank,
+                                            // "Date": order.Date,
+                                            // "preferredTiming": order.preferredTiming,
+                                            "CoupanId": order.CoupanId,
+                                            "addressId": order.addressId,
+                                            "status": order.status,
+                                            "paymentMethod": order.paymentMethod,
+                                            "paymentIntentId": "cod",
+                                            "totalAmount": totalAmount
+                                        };
                                     }
+
+                                    if (order.transactionId) {
+                                        newOrder.paymentIntentId = order.transactionId;
+                                    }
+                                    if (index === 0) {
+                                        const newOrderDocument = new orderModel({
+                                            "phoneNo": phoneNo,
+                                            "order": [newOrder]
+                                        });
+
+                                        try {
+                                            console.log(newOrder);
+                                            const result = await newOrderDocument.save(async (err, result) => {
+                                                if (err) {
+                                                    log.error(`Error in adding first order for phoneNo ${phoneNo}: ` + err);
+                                                    // return res.status(500).send({
+                                                    //     message: 'phoneNo ' + phone + ' Error in saving first order.'
+                                                    // });
+                                                    return false;
+                                                }
+                                                else {
+
+                                                    // await ScheduleModel.findOneAndUpdate(
+                                                    //     { "schedule.showDate": order.Date },
+                                                    //     { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
+                                                    //     {
+                                                    //         arrayFilters: [
+                                                    //             { "outer.showDate": order.Date },
+                                                    //             { "inner.time": preferredSlot.time }
+                                                    //         ],
+                                                    //         new: true
+                                                    //     },
+                                                    //     (error, updatedDocument) => {
+                                                    //         if (error) {
+                                                    //             log.error('Error updating schedule:', error);
+                                                    //             // Handle the error as needed
+                                                    //             return false;
+                                                    //         } else {
+                                                    //             log.info('Schedule updated successfully:', updatedDocument);
+                                                    //             // Continue with any additional logic if needed
+                                                    //         }
+                                                    //     }
+                                                    // );
+                                                    log.info(result.phoneNo + ' has just ordered for the first time!');
+                                                    log.info('Your first order is queued successfully.');
+                                                    // return res.status(200).send({
+                                                    //     statusCode: 200,
+                                                    //     message: 'Your first order is queued successfully.',
+                                                    //     phoneNo: result.phoneNo
+                                                    // });
+
+                                                }
+                                            });
+                                            // console.log("11");
+                                            return result;
+                                            // const result = await newOrderDocument.save();
+
+                                            // Update schedule here if needed
+
+                                            // return result;
+                                        } catch (err) {
+                                            log.error(`Error in adding first order for phoneNo ${phoneNo}: ` + err);
+                                            return false;
+                                        }
+                                    } else {
+                                        try {
+                                            const check = orderDetails.order;
+                                            check.push(newOrder)
+                                            console.log(newOrder);
+                                            const result = await orderModel.findOneAndUpdate(
+                                                { phoneNo: phoneNo },
+                                                { $set: { order: check } },
+                                                { new: true, upsert: true }
+                                                , async (err, response) => {
+                                                    console.log("updatePoint");
+                                                    if (err || !response) {
+                                                        console.log(response);
+                                                        log.error(`Error in adding new order` + err);
+                                                        // return res.status(400).send({
+                                                        //     message: 'Error in adding new order'
+                                                        // })
+                                                        return false;
+                                                    }
+                                                    else {
+                                                        // await ScheduleModel.findOneAndUpdate(
+                                                        //     { "schedule.showDate": order.Date },
+                                                        //     { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
+                                                        //     {
+                                                        //         arrayFilters: [
+                                                        //             { "outer.showDate": order.Date },
+                                                        //             { "inner.time": preferredSlot.time }
+                                                        //         ],
+                                                        //         new: true
+                                                        //     },
+                                                        //     (error, updatedDocument) => {
+                                                        //         if (error) {
+                                                        //             log.error('Error updating schedule:', error);
+                                                        //             // Handle the error as needed
+                                                        //             return false;
+                                                        //         } else {
+                                                        //             log.info('Schedule updated successfully:', updatedDocument);
+                                                        //             // Continue with any additional logic if needed
+                                                        //         }
+                                                        //     }
+                                                        // );
+                                                        log.info(`Sucessfully added new order in the order array to phoneNo ${phoneNo}`);
+                                                        // return res.status(200).send({
+                                                        //     statusCode: 200,
+                                                        //     message: 'Successfully added new order',
+                                                        // })
+
+                                                    }
+
+                                                })
+                                            return result;
+
+                                        } catch (err) {
+                                            log.error(`Error in adding new order` + err);
+                                            return false;
+                                        }
+                                    }
+
                                 }
                             })
 
@@ -715,6 +1523,7 @@ async function addOrderDao(token, order) {
                         if (e || !fuelRates) {
                             // console.log(r);
                             log.error(`Error in finding fuel value` + e);
+                            return false;
                             // return res.status(400).send({
                             //     message: 'Error in finding fuel value'
                             // })
@@ -745,12 +1554,18 @@ async function addOrderDao(token, order) {
                                 // });
                             }
 
-                            rate = parseInt(rate);
+                            // rate = parseInt(rate);
 
-                            const totalAmount = parseInt(order.fuelAmount) * rate;
+                            // const totalAmount = parseInt(order.fuelAmount) * rate;
+                            rate = parseFloat(rate.replace('$', ''));
+                            //  console.log(rate);
+                            let totalAmount = parseFloat(order.fuelAmount) * rate;
 
                             console.log(parseInt(order.fuelAmount));
                             console.log({ totalAmount });
+                            if (order.emergency == true) {
+                                totalAmount = totalAmount + 20;
+                            }
 
 
                             let orderDetails = await orderModel.findOne({ phoneNo: phoneNo });
@@ -760,113 +1575,161 @@ async function addOrderDao(token, order) {
                             if (orderDetails) {
                                 index = orderDetails.order.length;
                             }
-                            if (index === 0) {
-                                let newOrder = new orderModel({
-                                    "phoneNo": phoneNo,
-                                    "order": {
-                                        "fuelType": order.fuelType,
-                                        "fuelAmount": order.fuelAmount,
-                                        "emergency": order.emergency,
-                                        "Date": order.Date,
-                                        "preferredTiming": order.preferredTiming,
-                                        "CoupanId": order.CoupanId,
-                                        "addressId": order.addressId,
-                                        "status": order.status,
-
-                                        "totalAmount": totalAmount
-                                    }
-                                });
-                                const result = await newOrder.save(async (err, result) => {
-                                    if (err) {
-                                        log.error(`Error in adding first order for phoneNo ${phoneNo}: ` + err);
-                                        // return res.status(500).send({
-                                        //     message: 'phoneNo ' + phone + ' Error in saving first order.'
-                                        // });
-                                    }
-                                    else {
-                                        await ScheduleModel.findOneAndUpdate(
-                                            { "schedule.showDate": order.Date },
-                                            { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
-                                            {
-                                                arrayFilters: [
-                                                    { "outer.showDate": order.Date },
-                                                    { "inner.time": preferredSlot.time }
-                                                ],
-                                                new: true
-                                            },
-                                            (error, updatedDocument) => {
-                                                if (error) {
-                                                    log.error('Error updating schedule:', error);
-                                                    // Handle the error as needed
-                                                } else {
-                                                    log.info('Schedule updated successfully:', updatedDocument);
-                                                    // Continue with any additional logic if needed
-                                                }
-                                            }
-                                        );
-
-                                        log.info(result.phoneNo + ' has just ordered for the first time!');
-                                        // return res.status(200).send({
-                                        //     statusCode: 200,
-                                        //     message: 'Your first order is queued successfully.',
-                                        //     phoneNo: result.phoneNo
-                                        // });
-
-                                    }
-                                });
-                                // console.log("11");
-                                return result;
+                            let newOrder;
+                            if (order.fullTank == true) {
+                                newOrder = {
+                                    "fuelType": order.fuelType,
+                                    "fuelAmount": order.fuelAmount,
+                                    "emergency": order.emergency,
+                                    "fullTank": order.fullTank,
+                                    // "Date": order.Date,
+                                    // "preferredTiming": order.preferredTiming,
+                                    "CoupanId": order.CoupanId,
+                                    "addressId": order.addressId,
+                                    "status": order.status,
+                                    "paymentMethod": order.paymentMethod,
+                                    "paymentIntentId": "cod",
+                                    "totalAmount": -1
+                                };
                             }
                             else {
-                                console.log(order.Date);
-                                console.log(order);
-                                // console.log(orderDetails.order, "aaaaa");
-                                Order = { ...Order, "totalAmount": totalAmount };
-                                // console.log({ Order });
-                                const check = orderDetails.order;
-                                check.push(Order)
-                                // console.log({ check });
-                                const result = await orderModel.findOneAndUpdate({ phoneNo: phoneNo }, { order: check }, { new: true, upsert: true }, async (err, response) => {
-                                    console.log("updatePoint");
-                                    if (err || !response) {
-                                        console.log(response);
-                                        log.error(`Error in adding new order` + err);
-                                        // return res.status(400).send({
-                                        //     message: 'Error in adding new order'
-                                        // })
-                                    }
-                                    await ScheduleModel.findOneAndUpdate(
-                                        { "schedule.showDate": order.Date },
-                                        { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
-                                        {
-                                            arrayFilters: [
-                                                { "outer.showDate": order.Date },
-                                                { "inner.time": preferredSlot.time }
-                                            ],
-                                            new: true
-                                        },
-                                        (error, updatedDocument) => {
-                                            if (error) {
-                                                log.error('Error updating schedule:', error);
-                                                // Handle the error as needed
-                                            } else {
-                                                log.info('Schedule updated successfully:', updatedDocument);
-                                                // Continue with any additional logic if needed
-                                            }
-                                        }
-                                    );
-
-                                    log.info(`Sucessfully added new order in the order array to phoneNo ${phoneNo}`);
-                                    // return res.status(200).send({
-                                    //     statusCode: 200,
-                                    //     message: 'Successfully added new order',
-                                    // })
-
-                                })
-                                return result;
-
-
+                                newOrder = {
+                                    "fuelType": order.fuelType,
+                                    "fuelAmount": order.fuelAmount,
+                                    "emergency": order.emergency,
+                                    "fullTank": order.fullTank,
+                                    // "Date": order.Date,
+                                    // "preferredTiming": order.preferredTiming,
+                                    "CoupanId": order.CoupanId,
+                                    "addressId": order.addressId,
+                                    "status": order.status,
+                                    "paymentMethod": order.paymentMethod,
+                                    "paymentIntentId": "cod",
+                                    "totalAmount": totalAmount
+                                };
                             }
+                            if (order.transactionId) {
+                                newOrder.paymentIntentId = order.transactionId;
+                            }
+                            if (index === 0) {
+                                const newOrderDocument = new orderModel({
+                                    "phoneNo": phoneNo,
+                                    "order": [newOrder]
+                                });
+
+                                try {
+                                    console.log(newOrder);
+                                    const result = await newOrderDocument.save(async (err, result) => {
+                                        if (err) {
+                                            log.error(`Error in adding first order for phoneNo ${phoneNo}: ` + err);
+                                            // return res.status(500).send({
+                                            //     message: 'phoneNo ' + phone + ' Error in saving first order.'
+                                            // });
+                                            return false;
+                                        }
+                                        else {
+
+                                            // await ScheduleModel.findOneAndUpdate(
+                                            //     { "schedule.showDate": order.Date },
+                                            //     { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
+                                            //     {
+                                            //         arrayFilters: [
+                                            //             { "outer.showDate": order.Date },
+                                            //             { "inner.time": preferredSlot.time }
+                                            //         ],
+                                            //         new: true
+                                            //     },
+                                            //     (error, updatedDocument) => {
+                                            //         if (error) {
+                                            //             log.error('Error updating schedule:', error);
+                                            //             // Handle the error as needed
+                                            //             return false;
+                                            //         } else {
+                                            //             log.info('Schedule updated successfully:', updatedDocument);
+                                            //             // Continue with any additional logic if needed
+                                            //         }
+                                            //     }
+                                            // );
+                                            log.info(result.phoneNo + ' has just ordered for the first time!');
+                                            log.info('Your first order is queued successfully.');
+                                            // return res.status(200).send({
+                                            //     statusCode: 200,
+                                            //     message: 'Your first order is queued successfully.',
+                                            //     phoneNo: result.phoneNo
+                                            // });
+
+                                        }
+                                    });
+                                    // console.log("11");
+                                    return result;
+                                    // const result = await newOrderDocument.save();
+
+                                    // Update schedule here if needed
+
+                                    // return result;
+                                } catch (err) {
+                                    log.error(`Error in adding first order for phoneNo ${phoneNo}: ` + err);
+                                    return false;
+                                }
+                            } else {
+                                try {
+
+                                    const check = orderDetails.order;
+                                    check.push(newOrder)
+                                    console.log(newOrder);
+                                    const result = await orderModel.findOneAndUpdate(
+                                        { phoneNo: phoneNo },
+                                        { $set: { order: check } },
+                                        { new: true, upsert: true }
+                                        , async (err, response) => {
+                                            console.log("updatePoint");
+                                            if (err || !response) {
+                                                console.log(response);
+                                                log.error(`Error in adding new order` + err);
+                                                // return res.status(400).send({
+                                                //     message: 'Error in adding new order'
+                                                // })
+                                                return false;
+                                            }
+                                            else {
+                                                // await ScheduleModel.findOneAndUpdate(
+                                                //     { "schedule.showDate": order.Date },
+                                                //     { $set: { "schedule.$[outer].slots.$[inner]": preferredSlot } },
+                                                //     {
+                                                //         arrayFilters: [
+                                                //             { "outer.showDate": order.Date },
+                                                //             { "inner.time": preferredSlot.time }
+                                                //         ],
+                                                //         new: true
+                                                //     },
+                                                //     (error, updatedDocument) => {
+                                                //         if (error) {
+                                                //             log.error('Error updating schedule:', error);
+                                                //             // Handle the error as needed
+                                                //             return false;
+                                                //         } else {
+                                                //             log.info('Schedule updated successfully:', updatedDocument);
+                                                //             // Continue with any additional logic if needed
+                                                //         }
+                                                //     }
+                                                // );
+                                                log.info(`Sucessfully added new order in the order array to phoneNo ${phoneNo}`);
+                                                // return res.status(200).send({
+                                                //     statusCode: 200,
+                                                //     message: 'Successfully added new order',
+                                                // })
+
+                                            }
+
+                                        })
+                                    return result;
+
+                                } catch (err) {
+                                    log.error(`Error in adding new order` + err);
+                                    return false;
+                                }
+                            }
+
 
 
                         }
@@ -876,8 +1739,11 @@ async function addOrderDao(token, order) {
             }
         }
 
+
+
     } catch (error) {
         log.error("error while adding new order " + error)
+        return false;
         // return res.status(400).send({
         //     message: "error while adding new order " + error
         // })
@@ -906,18 +1772,18 @@ async function updatedScheduleDao() {
             currentDate.setDate(today.getDate() + i);
 
             const formattedDate = currentDate.toISOString().split('T')[0];
-            const properDate = formatDate(currentDate);
+            const showDate = formatDate(currentDate);
 
-            console.log(formattedDate);
+            console.log(showDate);
             // Shift the data for each day
             if (i < 3) {
                 existingData[0].schedule[i].date = existingData[0].schedule[i + 1].date;
                 existingData[0].schedule[i].slots = existingData[0].schedule[i + 1].slots.map(slot => ({ ...slot }));
-                existingData[0].schedule[i].properDate = existingData[0].schedule[i + 1].properDate;
+                existingData[0].schedule[i].showDate = existingData[0].schedule[i + 1].properDate;
             } else {
                 // For the last day, add a new entry for the upcoming day
                 existingData[0].schedule[i].date = formattedDate;
-                existingData[0].schedule[i].properDate = properDate;
+                existingData[0].schedule[i].showDate = showDate;
                 existingData[0].schedule[i].slots.forEach(slot => {
                     slot.petrol = 0; // Reset petrol for the new day 
                     slot.diesel = 0; // Reset diesel for the new day

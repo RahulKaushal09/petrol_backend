@@ -176,11 +176,14 @@ async function addAddressDao(req, res) {
         const loginInfo = req.body;
         const phoneNo = req.phoneNo;
         const adr = loginInfo.address;
-
+        const payload = await getAddress(phoneNo, res);
+        // const adrArray = payload.address;
+        payload.address.push(adr);
+        console.log(payload);
         const result = await UserModel.findOneAndUpdate(
             { phoneNo: phoneNo },
-            { $push: { address: adr } }, // Use $push to add the new address to the array
-            { new: true },
+            { $set: { address: adr } }, // Update operation
+            { upsert: true, new: true },
             (err, response) => {
                 console.log("updatePoint");
                 if (err || !response) {
@@ -193,6 +196,7 @@ async function addAddressDao(req, res) {
                     log.info(`Sucessfully added new addres in the addres array to phoneNo ${phoneNo}`);
                     // console.log(res);
                     const newAddress = response.address[response.address.length - 1]
+                    // console.log(newAddress._id);
                     return res.status(200).send({
                         statusCode: 200,
                         message: 'Successfully added new address',

@@ -14,14 +14,19 @@ async function getAllfuels(req, res) {
         if (err || !response) {
             log.error(`failed in the query in dao layer ` + err);
             return res.status(404).send({
-                message: 'Cannot find any fuels with given phoneNo '
+                message: 'Something went wrong',
+                statusCode: 404
             })
         }
-        console.log({ response });
+
+        let result = { petrol: {}, diesel: {}, premium: {} };
+        result.petrol = response[0].petrol;
+        result.diesel = response[0].diesel;
+        result.premium = response[0].premium;
         log.success('Successfully fetched all the fuels with given phoen no');
         res.status(200).send({
-            message: 'Successfully fetched all the fuel',
-            result: response
+            statusCode: 200,
+            result: result
         })
     })
 }

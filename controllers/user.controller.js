@@ -80,6 +80,17 @@ async function existsEmail(req, res, boolFlag) {
 async function getSchedule(req, res) {
     try {
 
+        const fuelType = req.body.fuelType;
+        // console.log(fuelType);
+        if (fuelType != "petrol" && fuelType != "diesel") {
+            return res.status(404).send({
+                message: "Something Went Wrong",
+                statusCode: 404
+            })
+        }
+
+
+
         await ScheduleModel.find({}, (err, response) => {
             console.log({ response });
             if (err || !response) {
@@ -89,34 +100,29 @@ async function getSchedule(req, res) {
             else {
                 log.info("successfully entered schedule");
                 const currentDate = new Date();
+
                 const scheduleData = response[0].schedule.map(scheduleItem => {
                     const filteredSlots = (scheduleItem.slots || []).filter(slot => {
                         if (slot && scheduleItem.date && slot.time && slot.possibility !== 0) {
-                            const slotDateTime = new Date(scheduleItem.date);
-                            const [timeStart, timeEnd] = slot.time.split('-')[0].split(':').map(Number);
-                            // console.log(timeStart);
-                            const hoursStart = timeStart % 12 + 12;
-                            const currentDay = currentDate.getDate();
-                            const currentHours = currentDate.getHours();
+                            const fuelTypeValue = fuelType === 'petrol' ? slot.petrol : slot.diesel;
 
-                            // Extract date and hours from slotDateTime
-                            slotDateTime.setHours(hoursStart, 0);
-                            const slotDay = slotDateTime.getDate();
-                            let slotHours = slotDateTime.getHours();
-                            // slotHours = slotHours % 12 + slotHours;
+                            if (fuelTypeValue < 2) {
+                                const slotDateTime = new Date(scheduleItem.date);
+                                const [timeStart, timeEnd] = slot.time.split('-')[0].split(':').map(Number);
+                                const hoursStart = timeStart % 12 + 12;
+                                const currentDay = currentDate.getDate();
+                                const currentHours = currentDate.getHours();
 
-                            // Compare the date and hours
-                            if (currentDay == slotDay) {
-                                console.log(slotHours);
-                                return (currentHours < slotHours)
+                                slotDateTime.setHours(hoursStart, 0);
+                                const slotDay = slotDateTime.getDate();
+                                let slotHours = slotDateTime.getHours();
+
+                                if (currentDay == slotDay) {
+                                    return (currentHours < slotHours);
+                                } else {
+                                    return true;
+                                }
                             }
-                            else {
-                                return true
-                            }
-
-                            // slotDateTime.setHours(hours);
-                            // slotDateTime.setMinutes(minutes);
-                            // return currentDate.getTime() <= slotDateTime.getTime();
                         }
                         return false;
                     }).map(filteredSlot => {
@@ -125,9 +131,54 @@ async function getSchedule(req, res) {
                         }
                         return filteredSlot;
                     });
+                    if (filteredSlots.length > 0) {
+                        return { ...scheduleItem.toObject(), slots: filteredSlots };
+                    }
+                    return null; // Exclude date if no available slots
+                }).filter(scheduleItem => scheduleItem !== null);
 
-                    return { ...scheduleItem.toObject(), slots: filteredSlots };
-                });
+                // return { ...scheduleItem.toObject(), slots: filteredSlots };
+                // });
+
+                // const scheduleData = response[0].schedule.map(scheduleItem => {
+                //     const filteredSlots = (scheduleItem.slots || []).filter(slot => {
+                //         if (slot && scheduleItem.date && slot.time && slot.possibility !== 0) {
+                //             const slotDateTime = new Date(scheduleItem.date);
+                //             const [timeStart, timeEnd] = slot.time.split('-')[0].split(':').map(Number);
+                //             // console.log(timeStart);
+                //             const hoursStart = timeStart % 12 + 12;
+                //             const currentDay = currentDate.getDate();
+                //             const currentHours = currentDate.getHours();
+
+                //             // Extract date and hours from slotDateTime
+                //             slotDateTime.setHours(hoursStart, 0);
+                //             const slotDay = slotDateTime.getDate();
+                //             let slotHours = slotDateTime.getHours();
+                //             // slotHours = slotHours % 12 + slotHours;
+
+                //             // Compare the date and hours
+                //             if (currentDay == slotDay) {
+                //                 console.log(slotHours);
+                //                 return (currentHours < slotHours)
+                //             }
+                //             else {
+                //                 return true
+                //             }
+
+                //             // slotDateTime.setHours(hours);
+                //             // slotDateTime.setMinutes(minutes);
+                //             // return currentDate.getTime() <= slotDateTime.getTime();
+                //         }
+                //         return false;
+                //     }).map(filteredSlot => {
+                //         if (filteredSlot) {
+                //             return { ...filteredSlot.toObject() };
+                //         }
+                //         return filteredSlot;
+                //     });
+
+                //     return { ...scheduleItem.toObject(), slots: filteredSlots };
+                // });
 
                 return res.status(200).send({
                     statusCode: 200,
@@ -263,7 +314,7 @@ async function sendEmailOtp(req, res) {
                 }, (err, response) => {
                     console.log({ response });
                     if (err || !response) {
-                        log.error(`no email found ` + err);
+                        log.info(`no email found ` + err);
                     }
                     else {
                         log.info(`Deleted the email and otp from db`)

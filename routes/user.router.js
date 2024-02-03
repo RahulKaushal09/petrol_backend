@@ -33,7 +33,7 @@ userRouter.post('/sendotp', checkSystemStatusMiddleware, sendOtpController);//wo
 userRouter.post('/verifyOtp', checkSystemStatusMiddleware, verifyOtpController);//working
 userRouter.post('/userEnterDetails', authTokenValidator, checkSystemStatusMiddleware, sendEmailOtp);//working
 userRouter.post('/emailVerifyOtp', authTokenValidator, checkSystemStatusMiddleware, verifyEmailOtp);//working
-userRouter.get('/getSchedule', authTokenValidator, checkSystemStatusMiddleware, getSchedule);//working
+userRouter.post('/getSchedule', authTokenValidator, checkSystemStatusMiddleware, getSchedule);//working
 
 userRouter.post('/updateusername', authTokenValidator, updateUsernameController,);// working
 userRouter.post('/updatename', authTokenValidator, updateNameController,);// working

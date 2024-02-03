@@ -29,18 +29,40 @@ async function paymentBeforeOrderController(req, res) {
         })
     }
 }
-async function addOrderController(token, order, res) {
+async function addOrderController(req, res) {
 
 
     try {
-        console.log("check3");
-        const payload_jwt = jwt.verify(token, secretKey);
-        const phoneNo = payload_jwt.phoneNo;
-        const response = await orderDao.addOrderDao(phoneNo, order, res);
-        return response;
-        // res.status(200).send({ message: "Working" })
+        let { error } = orderValidator.validateAddOrderSchema(req.body, res);
+        // console.log("check");
+        if (isNotValidSchema(error, res)) return;
+        if (req.body.order.paymentMethod != "COD") {
+            return res.status(400).send({
+                message: "Authentication Error",
+                statusCode: 400
+            })
+        }
+        else {
+
+            console.log("check3");
+            const token = req.header('x-auth-token');
+
+            const response = await orderDao.addOrderDao(token, req.body);
+            if (response == false) {
+                log.error("error while ordering through cod")
+                return res.status(400).send({
+                    message: "Something Went Wrong",
+                    statusCode: 400
+                })
+            }
+            else {
+
+                return res.status(200).send({ message: "Ordered successfully", result: response, statusCode: 200 })
+            }
+            // return response;
+        }
     } catch (error) {
-        log.error(`Error in adding new order for phoneNO ${orderInfo.phoneNo}` + error)
+        log.error(`Error in adding new order for phoneNO ${req.body.phoneNo}` + error)
         return res.status(400).send({
             message: 'error while adding order ' + error
         })
@@ -78,10 +100,10 @@ async function updateOrderStatusController(req, res) {
 
 async function getAllOrdersController(req, res) {
     console.log("controller checkpoint");
-    const orderInfo = req.params;
+
     try {
         console.log(" Dao entering checkpoint");
-        const response = await orderDao.getAllOrdersDao(orderInfo, res);
+        const response = await orderDao.getAllOrdersDao(req, res);
         return response;
     } catch (error) {
         log.error(`Error in getting orders by the phone no ${orderInfo.phoneNo}` + error)
