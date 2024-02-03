@@ -64,7 +64,7 @@ const fuelservicerouter = require('./routes/fuel.router')
 // -----------------> Routes Setup <---------------------------------//
 app.use('/user', userservicerouter);
 app.use('/order', orderservicerouter);
-app.use('/coupan', coupanservicerouter);
+app.use('/coupon', coupanservicerouter);
 app.use('/driver', driverservicerouter);
 app.use('/fuel', fuelservicerouter);
 

@@ -13,14 +13,7 @@ const findCoupanSchemaModel = {
     order: {
         fuelType: Joi.string().required(),
         fuelAmount: Joi.string().required(),
-        emergency: Joi.boolean(),
-        Date: Joi.date(),
-        preferredTiming: Joi.string().required(),
-        CoupanId: Joi.string(),
-        addressId: Joi.string().required(),
-        status: Joi.string().required(),
-        assignedTo: Joi.string().required(),
-        assignTiming: Joi.string().required(),
+
     }
 
 
@@ -30,8 +23,8 @@ const addCoupanSchemaModel = {
     // phoneNo: Joi.string().required().max(50),
     code: Joi.string().required().max(50),
     discount: Joi.string().required().max(50),
-    validTill: Joi.string().required().max(50),
-    limit: Joi.string().required().max(50),
+    // validTill: Joi.string().required().max(50),
+    // limit: Joi.string().required().max(50),
     status: Joi.string().required().max(50)
 }
 
@@ -44,8 +37,8 @@ const mongoCoupanSchema = new mongoose.Schema({
     // phoneNo: String,
     code: String,
     discount: String,
-    validTill: String,
-    limit: String,
+    // validTill: String,
+    // limit: String,
     status: String
 });
 

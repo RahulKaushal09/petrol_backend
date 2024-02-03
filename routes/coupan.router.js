@@ -12,10 +12,10 @@ const checkSystemStatusMiddleware = require('../middlewares/checkSystemStatus.js
 
 const coupanRouter = express.Router();
 
-coupanRouter.get('/getCoupans', authTokenValidator, checkSystemStatusMiddleware, getAllCoupansController);//working
-coupanRouter.get('/findCoupan', authTokenValidator, checkSystemStatusMiddleware, findCoupanController);//working
-coupanRouter.get('/adminGetCoupans', adminTokenValidator, getAllCoupansController);//working
-coupanRouter.post('/addCoupans', adminTokenValidator, addCoupanController);//working
-coupanRouter.post('/editCoupanStatus', adminTokenValidator, editCoupanStatus);//working
+coupanRouter.get('/getCoupons', authTokenValidator, checkSystemStatusMiddleware, getAllCoupansController);//working
+coupanRouter.post('/applyCoupon', authTokenValidator, checkSystemStatusMiddleware, findCoupanController);//working
+coupanRouter.get('/adminGetCoupons', adminTokenValidator, getAllCoupansController);//working
+coupanRouter.post('/addCoupons', adminTokenValidator, addCoupanController);//working
+coupanRouter.post('/editCouponStatus', adminTokenValidator, editCoupanStatus);//working
 
 module.exports = coupanRouter;

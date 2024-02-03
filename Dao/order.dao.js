@@ -289,7 +289,8 @@ async function paymentBeforeOrderDao(req, res) {
                                         // rate = parseInt(rate);
 
                                         // const Amount = parseInt(orderInfo.order.fuelAmount) * rate;
-                                        rate = parseFloat(rate);
+                                        rate = parseFloat(rate.replace('$', ''));
+
                                         let totalAmount = parseFloat(orderInfo.order.fuelAmount) * rate;
                                         console.log(parseFloat(orderInfo.order.fuelAmount));
                                         // console.log({ totalAmount });
@@ -297,6 +298,8 @@ async function paymentBeforeOrderDao(req, res) {
                                         const temp = parseFloat(discount);
                                         // console.log(parseInt(orderInfo.order.fuelAmount));
                                         totalAmount = ((100 - temp) / 100) * totalAmount;
+                                        totalAmount = parseFloat(totalAmount.toFixed(2));
+
                                         console.log({ totalAmount });
                                         if (orderInfo.order.emergency == true) {
                                             totalAmount = totalAmount + 20;
@@ -306,29 +309,38 @@ async function paymentBeforeOrderDao(req, res) {
 
 
                                         // payment
-                                        const session = await stripe.checkout.sessions.create({
-                                            payment_method_types: ['card'],
-                                            // customer_email: "hey@gmail.com",
+                                        try {
 
-                                            line_items: {
-                                                price_data: {
-                                                    currency: 'cad',
-                                                    product_data: {
-                                                        name: fuelType,
+                                            const session = await stripe.checkout.sessions.create({
+                                                payment_method_types: ['card'],
+                                                // customer_email: "hey@gmail.com",
+
+                                                line_items: [{
+                                                    price_data: {
+                                                        currency: 'cad',
+                                                        product_data: {
+                                                            name: fuelType,
+                                                        },
+                                                        unit_amount: parseInt(totalAmount * 100),
                                                     },
-                                                    unit_amount: totalAmount * 100,
+                                                    quantity: 1,
+                                                }],
+                                                mode: 'payment',
+                                                success_url: 'http://localhost:8100/success', // Redirect after successful payment
+                                                cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
+                                                metadata: {
+                                                    token: token,
+                                                    OrderDetails: JSON.stringify(orderInfo),
                                                 },
-                                                quantity: 1,
-                                            },
-                                            mode: 'payment',
-                                            success_url: 'http://localhost:8100/success', // Redirect after successful payment
-                                            cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
-                                            metadata: {
-                                                token: token,
-                                                OrderDetails: orderInfo,
-                                            },
-                                        });
-                                        res.json({ id: session.url });
+                                            });
+                                            res.status(200).send({ statusCode: 200, id: session.url, message: "Please Pay Online" });
+                                        } catch (error) {
+                                            console.log(error);
+                                            res.status(400).send({
+                                                statusCode: 400,
+                                                message: "Something Went Wrong"
+                                            })
+                                        }
                                     }
                                 })
 
@@ -385,36 +397,46 @@ async function paymentBeforeOrderDao(req, res) {
                                 console.log({ rate });
                                 console.log(parseFloat(orderInfo.order.fuelAmount)
                                 );
+                                totalAmount = parseFloat(totalAmount.toFixed(2));
+
                                 console.log({ totalAmount });
                                 if (orderInfo.order.emergency == true) {
                                     totalAmount = totalAmount + 20;
                                 }
                                 // PAYMENT
 
-                                const session = await stripe.checkout.sessions.create({
-                                    payment_method_types: ['card'],
-                                    // customer_email: "hey@gmail.com",
+                                try {
 
-                                    line_items: [{
-                                        price_data: {
-                                            currency: 'cad',
-                                            product_data: {
-                                                name: fuelType,
+                                    const session = await stripe.checkout.sessions.create({
+                                        payment_method_types: ['card'],
+                                        // customer_email: "hey@gmail.com",
+
+                                        line_items: [{
+                                            price_data: {
+                                                currency: 'cad',
+                                                product_data: {
+                                                    name: fuelType,
+                                                },
+                                                unit_amount: parseInt(totalAmount * 100),
                                             },
-                                            unit_amount: totalAmount * 100,
+                                            quantity: 1,
+                                        }],
+                                        mode: 'payment',
+                                        success_url: 'http://localhost:8100/success', // Redirect after successful payment
+                                        cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
+                                        metadata: {
+                                            token: token,
+                                            OrderDetails: JSON.stringify(orderInfo),
                                         },
-                                        quantity: 1,
-                                    }],
-                                    mode: 'payment',
-                                    success_url: 'http://localhost:8100/user/home', // Redirect after successful payment
-                                    cancel_url: 'http://localhost:8100/user/cancel',   // Redirect on cancellation
-                                    metadata: {
-                                        token: token,
-                                        OrderDetails: JSON.stringify(orderInfo),
-                                    },
-                                });
-                                res.status(200).send({ message: "Please pay Online", id: session.url, statusCode: 200 });
-
+                                    });
+                                    res.status(200).send({ statusCode: 200, id: session.url, message: "Please Pay Online" });
+                                } catch (error) {
+                                    console.log(error);
+                                    res.status(400).send({
+                                        statusCode: 400,
+                                        message: "Something Went Wrong"
+                                    })
+                                }
                             }
                         })
 
@@ -515,7 +537,8 @@ async function paymentBeforeOrderDao(req, res) {
                                     // rate = parseInt(rate);
 
                                     // const Amount = parseInt(orderInfo.order.fuelAmount) * rate;
-                                    rate = parseFloat(rate);
+                                    rate = parseFloat(rate.replace('$', ''));
+
                                     let totalAmount = parseFloat(orderInfo.order.fuelAmount) * rate;
                                     console.log(parseFloat(orderInfo.order.fuelAmount));
                                     // console.log({ totalAmount });
@@ -523,6 +546,8 @@ async function paymentBeforeOrderDao(req, res) {
                                     const temp = parseFloat(discount);
                                     // console.log(parseInt(orderInfo.order.fuelAmount));
                                     totalAmount = ((100 - temp) / 100) * totalAmount;
+                                    totalAmount = parseFloat(totalAmount.toFixed(2));
+
                                     console.log({ totalAmount });
                                     if (orderInfo.order.emergency == true) {
                                         totalAmount = totalAmount + 20;
@@ -532,29 +557,38 @@ async function paymentBeforeOrderDao(req, res) {
 
 
                                     // payment
-                                    const session = await stripe.checkout.sessions.create({
-                                        payment_method_types: ['card'],
-                                        // customer_email: "hey@gmail.com",
+                                    try {
 
-                                        line_items: {
-                                            price_data: {
-                                                currency: 'cad',
-                                                product_data: {
-                                                    name: fuelType,
+                                        const session = await stripe.checkout.sessions.create({
+                                            payment_method_types: ['card'],
+                                            // customer_email: "hey@gmail.com",
+
+                                            line_items: [{
+                                                price_data: {
+                                                    currency: 'cad',
+                                                    product_data: {
+                                                        name: fuelType,
+                                                    },
+                                                    unit_amount: parseInt(totalAmount * 100),
                                                 },
-                                                unit_amount: totalAmount * 100,
+                                                quantity: 1,
+                                            }],
+                                            mode: 'payment',
+                                            success_url: 'http://localhost:8100/success', // Redirect after successful payment
+                                            cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
+                                            metadata: {
+                                                token: token,
+                                                OrderDetails: JSON.stringify(orderInfo),
                                             },
-                                            quantity: 1,
-                                        },
-                                        mode: 'payment',
-                                        success_url: 'http://localhost:8100/success', // Redirect after successful payment
-                                        cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
-                                        metadata: {
-                                            token: token,
-                                            OrderDetails: orderInfo,
-                                        },
-                                    });
-                                    res.json({ id: session.url });
+                                        });
+                                        res.status(200).send({ statusCode: 200, id: session.url, message: "Please Pay Online" });
+                                    } catch (error) {
+                                        console.log(error);
+                                        res.status(400).send({
+                                            statusCode: 400,
+                                            message: "Something Went Wrong"
+                                        })
+                                    }
                                 }
                             })
 
@@ -611,36 +645,46 @@ async function paymentBeforeOrderDao(req, res) {
                             console.log({ rate });
                             console.log(parseFloat(orderInfo.order.fuelAmount)
                             );
+                            totalAmount = parseFloat(totalAmount.toFixed(2));
+
                             console.log({ totalAmount });
                             if (orderInfo.order.emergency == true) {
                                 totalAmount = totalAmount + 20;
                             }
                             // PAYMENT
 
-                            const session = await stripe.checkout.sessions.create({
-                                payment_method_types: ['card'],
-                                // customer_email: "hey@gmail.com",
+                            try {
 
-                                line_items: [{
-                                    price_data: {
-                                        currency: 'cad',
-                                        product_data: {
-                                            name: fuelType,
+                                const session = await stripe.checkout.sessions.create({
+                                    payment_method_types: ['card'],
+                                    // customer_email: "hey@gmail.com",
+
+                                    line_items: [{
+                                        price_data: {
+                                            currency: 'cad',
+                                            product_data: {
+                                                name: fuelType,
+                                            },
+                                            unit_amount: parseInt(totalAmount * 100),
                                         },
-                                        unit_amount: totalAmount * 100,
+                                        quantity: 1,
+                                    }],
+                                    mode: 'payment',
+                                    success_url: 'http://localhost:8100/success', // Redirect after successful payment
+                                    cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
+                                    metadata: {
+                                        token: token,
+                                        OrderDetails: JSON.stringify(orderInfo),
                                     },
-                                    quantity: 1,
-                                }],
-                                mode: 'payment',
-                                success_url: 'http://localhost:8100/user/home', // Redirect after successful payment
-                                cancel_url: 'http://localhost:8100/user/cancel',   // Redirect on cancellation
-                                metadata: {
-                                    token: token,
-                                    OrderDetails: JSON.stringify(orderInfo),
-                                },
-                            });
-                            res.status(200).send({ message: "Please pay Online", id: session.url, statusCode: 200 });
-
+                                });
+                                res.status(200).send({ statusCode: 200, id: session.url, message: "Please Pay Online" });
+                            } catch (error) {
+                                console.log(error);
+                                res.status(400).send({
+                                    statusCode: 400,
+                                    message: "Something Went Wrong"
+                                })
+                            }
                         }
                     })
 
@@ -769,6 +813,7 @@ async function addOrderDao(token, order) {
                 else {
                     // logic for coupan
                     if (order.CoupanId) {
+                        // console.log("coupan added");
                         await CoupanModel.findOne({ code: order.CoupanId }, async (err, response) => {
                             if (err || !response) {
                                 // console.log({ response });
@@ -829,6 +874,8 @@ async function addOrderDao(token, order) {
                                         const temp = parseFloat(discount);
                                         // console.log(parseInt(order.fuelAmount));
                                         totalAmount = ((100 - temp) / 100) * totalAmount;
+                                        totalAmount = parseFloat(totalAmount.toFixed(2));
+
                                         console.log({ totalAmount });
                                         if (order.emergency == true) {
                                             totalAmount = totalAmount + 20;
@@ -1052,7 +1099,10 @@ async function addOrderDao(token, order) {
                                 let totalAmount = parseFloat(order.fuelAmount) * rate;
 
                                 console.log(parseInt(order.fuelAmount));
+                                totalAmount = parseFloat(totalAmount.toFixed(2));
+
                                 console.log({ totalAmount });
+
                                 if (order.emergency == true) {
                                     totalAmount = totalAmount + 20;
                                 }
@@ -1339,6 +1389,8 @@ async function addOrderDao(token, order) {
                                     const temp = parseFloat(discount);
                                     // console.log(parseInt(order.fuelAmount));
                                     totalAmount = ((100 - temp) / 100) * totalAmount;
+                                    totalAmount = parseFloat(totalAmount.toFixed(2));
+
                                     console.log({ totalAmount });
                                     if (order.emergency == true) {
                                         totalAmount = totalAmount + 20;
@@ -1562,6 +1614,8 @@ async function addOrderDao(token, order) {
                             let totalAmount = parseFloat(order.fuelAmount) * rate;
 
                             console.log(parseInt(order.fuelAmount));
+                            totalAmount = parseFloat(totalAmount.toFixed(2));
+
                             console.log({ totalAmount });
                             if (order.emergency == true) {
                                 totalAmount = totalAmount + 20;
@@ -1756,7 +1810,7 @@ async function addOrderDao(token, order) {
 async function updatedScheduleDao() {
     try {
         // Fetch the existing data from MongoDB
-        const existingData = await ScheduleModel.find({}, '-_id -__v').sort({ date: 1 }).exec();
+        const existingData = await ScheduleModel.find({}).sort({ date: 1 }).exec();
 
         if (existingData[0].schedule.length !== 4) {
             console.error('Error: Expected 4 days of data but found', existingData[0].schedule.length);
@@ -1767,23 +1821,23 @@ async function updatedScheduleDao() {
         const today = new Date();
 
         // Shift the data for each day and add a new entry for the upcoming day
+        // console.log(existingData[0].schedule);
         for (let i = 0; i < 4; i++) {
             const currentDate = new Date(today);
             currentDate.setDate(today.getDate() + i);
 
             const formattedDate = currentDate.toISOString().split('T')[0];
-            const showDate = formatDate(currentDate);
+            const showDate_ = formatDate(currentDate);
 
-            console.log(showDate);
             // Shift the data for each day
             if (i < 3) {
                 existingData[0].schedule[i].date = existingData[0].schedule[i + 1].date;
                 existingData[0].schedule[i].slots = existingData[0].schedule[i + 1].slots.map(slot => ({ ...slot }));
-                existingData[0].schedule[i].showDate = existingData[0].schedule[i + 1].properDate;
+                existingData[0].schedule[i].showDate = existingData[0].schedule[i + 1].showDate;
             } else {
                 // For the last day, add a new entry for the upcoming day
                 existingData[0].schedule[i].date = formattedDate;
-                existingData[0].schedule[i].showDate = showDate;
+                existingData[0].schedule[i].showDate = showDate_;
                 existingData[0].schedule[i].slots.forEach(slot => {
                     slot.petrol = 0; // Reset petrol for the new day 
                     slot.diesel = 0; // Reset diesel for the new day
@@ -1793,6 +1847,7 @@ async function updatedScheduleDao() {
 
         // Save the updated data back to MongoDB
         const updatedSchedule = existingData[0];
+        // console.log(updatedSchedule);
         await ScheduleModel.findOneAndUpdate({}, updatedSchedule, { upsert: true });
         console.log('Data updated and saved to MongoDB.');
     } catch (error) {
@@ -1825,7 +1880,9 @@ async function createOrUpdateScheduleDao() {
                             { "slot": 6, "time": "5-6 pm", "petrol": 0, "diesel": 0 },
                             { "slot": 7, "time": "6-7 pm", "petrol": 0, "diesel": 0 },
                             { "slot": 8, "time": "7-8 pm", "petrol": 0, "diesel": 0 }
-                        ]
+                        ],
+                        "showDate": "",
+                        "date": "",
                     },
                     {
                         "day": "Day 2",
@@ -1876,12 +1933,12 @@ async function createOrUpdateScheduleDao() {
                 currentDate.setDate(today.getDate() + i);
 
                 const formattedDate = currentDate.toISOString().split('T')[0];
-                console.log(currentDate);
+                // console.log(currentDate);
                 // Update the schedule with the new day and date
                 existingData.schedule[i].day = `Day ${i + 1}`;
                 existingData.schedule[i].date = currentDate; // You can add a "date" field if needed
                 existingData.schedule[i].showDate = formatDate(currentDate); // You can add a "date" field if needed
-                console.log(typeof (existingData.schedule[i].showDate));
+                // console.log(typeof (existingData.schedule[i].showDate));
                 // Optionally, you can reset the orders for each slot
                 existingData.schedule[i].slots.forEach(slot => {
                     slot.petrol = 0;
