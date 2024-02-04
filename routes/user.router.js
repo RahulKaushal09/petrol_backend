@@ -28,7 +28,7 @@ userRouter.post('/updatephone', authTokenValidator, checkSystemStatusMiddleware,
 userRouter.post('/verifyUpdatePhone', authTokenValidator, checkSystemStatusMiddleware, verifyUpdatePhoneController,);//working
 userRouter.post('/updateAddress', authTokenValidator, checkSystemStatusMiddleware, updateAddress,);//working
 userRouter.post('/addAddress', authTokenValidator, checkSystemStatusMiddleware, addAdressController,);//working
-userRouter.delete('/deleteAddress', authTokenValidator, checkSystemStatusMiddleware, addressDeleteController);//working
+userRouter.post('/deleteAddress', authTokenValidator, checkSystemStatusMiddleware, addressDeleteController);//working
 userRouter.post('/sendotp', checkSystemStatusMiddleware, sendOtpController);//working
 userRouter.post('/verifyOtp', checkSystemStatusMiddleware, verifyOtpController);//working
 userRouter.post('/userEnterDetails', authTokenValidator, checkSystemStatusMiddleware, sendEmailOtp);//working

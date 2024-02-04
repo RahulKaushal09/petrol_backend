@@ -121,7 +121,7 @@ async function getByPhoneNo(phoneNo, res) {
             return res.status(404).send({
                 statusCode: 404,
                 phoneNo: phoneNo,
-                message: 'No user with this ' + phoneNo + 'found'
+                message: 'No user Found!'
             })
         }
         else {
@@ -129,7 +129,7 @@ async function getByPhoneNo(phoneNo, res) {
             return res.status(200).send({
                 statusCode: 200,
                 result: response,
-                message: `Found a user with phoneno ${phoneNo}`
+                message: ``
             })
         }
     })
@@ -139,9 +139,10 @@ async function getAddress(phoneNo, res) {
     return await UserModel.findOne({ phoneNo: phoneNo });
 }
 
-async function updateAddressDao(loginInfo, res) {
+async function updateAddressDao(req, res) {
+    const loginInfo = req.body
     const address = loginInfo.address;
-    const phoneNo = loginInfo.phoneNo;
+    const phoneNo = req.phoneNo;
     const _id = loginInfo._id;
     // const phoneNo = loginInfo.phoneNo;
     const userExists = getAddress(phoneNo, res);
@@ -182,7 +183,7 @@ async function addAddressDao(req, res) {
         console.log(payload);
         const result = await UserModel.findOneAndUpdate(
             { phoneNo: phoneNo },
-            { $set: { address: adr } }, // Update operation
+            { $set: { address: payload.address } }, // Update operation
             { upsert: true, new: true },
             (err, response) => {
                 console.log("updatePoint");
@@ -219,15 +220,7 @@ async function deleteAddressDao(req, res) {
     try {
         let phoneNo = req.phoneNo;
         let addressDel = req.body
-
         console.log("dao entered");
-        // store in a variable phoneno and address
-        // check for phoneNo
-        // check for address in that array
-        // matching address id found 
-        // mongo querry for update and delete
-        // return the result
-        // const phoneNo = loginInfo.phoneNo;
         console.log(phoneNo);
         const address_id = addressDel.address_id;
         console.log({ addressDel });
@@ -235,39 +228,37 @@ async function deleteAddressDao(req, res) {
         if (userExists == null) {
             log.info('cannot find any address with this number ' + phoneNo)
             return res.status(404).send({
-                message: 'cannot find any address with this number '
+                statusCode: 404,
+                message: 'No User Found! '
             })
         }
         console.log({ userExists });
         let idFound = address_id;
-
-
-
-
         const result = await UserModel.updateOne({ phoneNo: phoneNo },
             { $pull: { address: { _id: idFound } } },
             (err, response) => {
                 if (err || !response) {
                     log.error(`Error in removing the address` + err);
                     return res.status(404).send({
-                        message: `Error in removing the address`
+                        statusCode: 404,
+                        message: `Error While Deleting`
                     })
                 }
                 log.info(`Successfully deleted the address from phoneNo ${phoneNo}'s addresses`);
                 return res.status(200).send({
                     statusCode: 200,
-                    message: 'Successfully deleted the address'
+                    message: 'Deleted Successfully'
                 })
             }
         );
         return result;
-        // return res.status(200).send({
-        // statusCode: 200, message: 'testing phase'
+
 
     } catch (error) {
         log.error(" error in deleting the address in Dao");
         res.status(400).send({
-            message: 'error in deleting the address in Dao'
+            statusCode: 400,
+            message: 'Something Went Wrong'
         })
     }
 }

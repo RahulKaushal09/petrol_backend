@@ -25,6 +25,7 @@ const updateOrderStatusSchemaModel = {
 const addOrderSchemaModel = {
     // phoneNo: Joi.string().max(10).min(10).required(),
     order: {
+        name: Joi.string().required(),
         fuelType: Joi.string().required(),
         fuelAmount: Joi.string().required(),
         emergency: Joi.boolean().allow(''),
@@ -47,6 +48,7 @@ const addOrderSchemaModel = {
 const mongoOrderSchema = new mongoose.Schema({
     phoneNo: String,
     order: [{
+        name: String,
         fuelType: String,
         fuelAmount: String,
         emergency: Boolean,

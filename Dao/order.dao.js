@@ -28,6 +28,7 @@ async function getAllOrdersDao(req, res) {
             return res.status(200).send({
                 statusCode: 200,
                 phoneNo: phoneNo,
+                result: { order: [] }
                 // message: 'No order with this ' + phoneNo + ' number found'
             })
         }
@@ -46,7 +47,6 @@ async function getAllOrdersDao(req, res) {
 async function getOrdersByIdDao(orderInfo, res) {
     // const _orderId = orderInfo._orderId;
     // console.log({ _orderId });
-
 }
 
 async function updateOrderStatusDao(orderInfo, res) {
@@ -893,6 +893,7 @@ async function addOrderDao(token, order) {
                                         let newOrder;
                                         if (order.fullTank == true) {
                                             newOrder = {
+                                                "name": order.name,
                                                 "fuelType": order.fuelType,
                                                 "fuelAmount": order.fuelAmount,
                                                 "emergency": order.emergency,
@@ -909,6 +910,7 @@ async function addOrderDao(token, order) {
                                         }
                                         else {
                                             newOrder = {
+                                                "name": order.name,
                                                 "fuelType": order.fuelType,
                                                 "fuelAmount": order.fuelAmount,
                                                 "emergency": order.emergency,
@@ -1118,6 +1120,7 @@ async function addOrderDao(token, order) {
                                 let newOrder;
                                 if (order.fullTank == true) {
                                     newOrder = {
+                                        "name": order.name,
                                         "fuelType": order.fuelType,
                                         "fuelAmount": order.fuelAmount,
                                         "emergency": order.emergency,
@@ -1134,6 +1137,7 @@ async function addOrderDao(token, order) {
                                 }
                                 else {
                                     newOrder = {
+                                        "name": order.name,
                                         "fuelType": order.fuelType,
                                         "fuelAmount": order.fuelAmount,
                                         "emergency": order.emergency,
@@ -1408,6 +1412,7 @@ async function addOrderDao(token, order) {
                                     let newOrder;
                                     if (order.fullTank == true) {
                                         newOrder = {
+                                            "name": order.name,
                                             "fuelType": order.fuelType,
                                             "fuelAmount": order.fuelAmount,
                                             "emergency": order.emergency,
@@ -1424,6 +1429,7 @@ async function addOrderDao(token, order) {
                                     }
                                     else {
                                         newOrder = {
+                                            "name": order.name,
                                             "fuelType": order.fuelType,
                                             "fuelAmount": order.fuelAmount,
                                             "emergency": order.emergency,
@@ -1632,6 +1638,7 @@ async function addOrderDao(token, order) {
                             let newOrder;
                             if (order.fullTank == true) {
                                 newOrder = {
+                                    "name": order.name,
                                     "fuelType": order.fuelType,
                                     "fuelAmount": order.fuelAmount,
                                     "emergency": order.emergency,
@@ -1648,6 +1655,7 @@ async function addOrderDao(token, order) {
                             }
                             else {
                                 newOrder = {
+                                    "name": order.name,
                                     "fuelType": order.fuelType,
                                     "fuelAmount": order.fuelAmount,
                                     "emergency": order.emergency,
@@ -1954,6 +1962,7 @@ async function createOrUpdateScheduleDao() {
             // console.log(formatDate(existingSchedule.schedule[0].date));
             // console.log(formatDate(new Date()));
             if (formatDate(existingSchedule.schedule[0].date) != formatDate(new Date())) {
+                log.info("schedule updating as date didnt matched")
                 updatedScheduleDao();
             }
 
