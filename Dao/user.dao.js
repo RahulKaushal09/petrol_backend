@@ -263,9 +263,10 @@ async function deleteAddressDao(req, res) {
     }
 }
 
-async function updateUsernameDao(loginInfo, res) {
-    console.log({ loginInfo });
-    const phoneNo = loginInfo.phoneNo;
+async function updateUsernameDao(req, res) {
+    // console.log({ loginInfo });
+    const loginInfo = req.body;
+    const phoneNo = req.phoneNo;
     const name = loginInfo.name;
 
     const result = await UserModel.findOneAndUpdate({ phoneNo: phoneNo }, { name: name },

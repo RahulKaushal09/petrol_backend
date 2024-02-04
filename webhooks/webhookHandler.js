@@ -1,6 +1,6 @@
 require('dotenv').config()
-// const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const stripe = require('stripe')("sk_test_51ObmyHDN57vbqAvmK5bOHIztyaJ2NbK8fQB1Rr0X60bBvBfW77PdbOQZ3FGsj0pJUoinVMkjPrgzPkbD221EAzo900mGlIThIL");
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// const stripe = require('stripe')("sk_test_51ObmyHDN57vbqAvmK5bOHIztyaJ2NbK8fQB1Rr0X60bBvBfW77PdbOQZ3FGsj0pJUoinVMkjPrgzPkbD221EAzo900mGlIThIL");
 const { addOrderDao } = require('../Dao/order.dao');
 // const endpointSecret = process.env.stripeEndpointSecret;
 const Logger = require('../logger/logger');
@@ -13,13 +13,14 @@ let token;
 exports.handleWebhookEvent = async (request, response) => {
     const headers = request.headers;
     const sig = headers['stripe-signature'];
+    // console.log(typeof (sig));
 
     let event;
 
 
     try {
         // console.log(request.body)
-
+        console.log(typeof (request.body));
         event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
     } catch (err) {
         console.log(err);

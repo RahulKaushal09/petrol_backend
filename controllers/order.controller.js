@@ -5,7 +5,6 @@ const log = new Logger('Order_Controller');
 const orderDao = require('../Dao/order.dao')
 // const { UserModel } = require('../models/user.schemaModel')
 const jwt = require('jsonwebtoken');
-const secretKey = "123456789";
 
 async function paymentBeforeOrderController(req, res) {
 
@@ -15,10 +14,7 @@ async function paymentBeforeOrderController(req, res) {
     if (isNotValidSchema(error, res)) return;
     // console.log("check2");
     try {
-        // console.log("check3");
-        // const token = req.header('x-auth-token');
-        // const payload_jwt = jwt.verify(token, secretKey);
-        // const phoneNo = payload_jwt.phoneNo;
+
         const response = await orderDao.paymentBeforeOrderDao(req, res);
         return response;
         // res.status(200).send({ message: "Working" })

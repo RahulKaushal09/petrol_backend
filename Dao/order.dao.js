@@ -6,7 +6,9 @@ const { ScheduleModel } = require('../models/order.schemaModel');
 const { CoupanModel } = require('../models/coupan.schemaModel');
 const { errorMonitor } = require('nodemailer/lib/xoauth2');
 const { FuelModel } = require('../models/fuel.schemaModel');
-const stripe = require('stripe')("sk_test_51ObmyHDN57vbqAvmK5bOHIztyaJ2NbK8fQB1Rr0X60bBvBfW77PdbOQZ3FGsj0pJUoinVMkjPrgzPkbD221EAzo900mGlIThIL");
+require('dotenv').config()
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const jwt = require('jsonwebtoken')
 const secretKey = "123456789"
 

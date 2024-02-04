@@ -35,7 +35,7 @@ userRouter.post('/userEnterDetails', authTokenValidator, checkSystemStatusMiddle
 userRouter.post('/emailVerifyOtp', authTokenValidator, checkSystemStatusMiddleware, verifyEmailOtp);//working
 userRouter.post('/getSchedule', authTokenValidator, checkSystemStatusMiddleware, getSchedule);//working
 
-userRouter.post('/updateusername', authTokenValidator, updateUsernameController,);// working
+// userRouter.post('/updateusername', authTokenValidator, updateUsernameController,);// working
 userRouter.post('/updatename', authTokenValidator, updateNameController,);// working
 // userRouter.post('/middleware', authTokenValidator)// just for debugging
 

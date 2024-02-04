@@ -79,7 +79,7 @@ const getByUsernameSchema = {
 }
 
 const updateDetailsSchemaModel = {
-    phoneNo: Joi.string(),
+    // phoneNo: Joi.string(),
     username: Joi.string().email(),
 }
 

@@ -4,6 +4,8 @@ const Logger = require('../logger/logger');
 const log = new Logger('User_Controller');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 const client = require('twilio')(accountSid, authToken);
 const verifySid = process.env.verifySID;
 const { UserModel, UserEmailModel } = require('../models/user.schemaModel')
@@ -14,8 +16,8 @@ const { ScheduleModel } = require('../models/order.schemaModel');
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: '900gamingg@gmail.com',
-        pass: 'szfn qduq ewoc xqmb'
+        user: EMAIL_USER,
+        pass: EMAIL_PASS
     }
 });
 
@@ -27,22 +29,7 @@ async function registerNewUser(req, res) {
     userObj.username = "";
     userObj.address = [];
     console.log(userObj);
-    // {
-    //     "name": "ayush bhai mehta",
-    //     "username": "ayushbhaimehta@gmail.com",
-    //     "phoneNo": "1234567890",
-    //     "address": [
-    //         {
-    //             "name": "Ayush",
-    //             "phoneNo": "1234567890",
-    //             "myself": true,
-    //             "saveas": "Home",
-    //             "fulladdr": "123 bhaldarpura Sarafaward Jabalpur India",
-    //             "vehicle": "Activa scoty",
-    //             "vnumber": "1001"
-    //         }
-    //     ]
-    // }
+
     let { error } = userValidator.validateNewUserSchema(userObj);
     if (isNotValidSchema(error, res)) return;
     console.log("entering dao");
@@ -54,25 +41,7 @@ async function registerNewUser(req, res) {
     }
 }
 const secretKey = "123456789";
-// const secretKey = "apptesting"
-// client.verify.v2
-//     .services(verifySid)
-//     .verifications.create({ to: "+917879038278", channel: "sms" })
-//     .then((verification) => console.log(verification.status, "flagger"))
-//     .then(() => {
-//         readline.createInterface({
-//             input: process.stdin,
-//             output: process.stdout,
-//         });
-//         readline.question("Please enter the OTP:", (otpCode) => {
-//             client.verify.v2
-//                 .services(verifySid)
-//                 .verificationChecks.create({ to: "+917879038278", code: otpCode })
-//                 .then((verification_check) => console.log(verification_check.status))
-//                 .then(() => readline.close());
-//         });
-//         // console.log({ readline });
-//     });
+
 async function existsEmail(req, res, boolFlag) {
 
 
@@ -137,48 +106,6 @@ async function getSchedule(req, res) {
                     return null; // Exclude date if no available slots
                 }).filter(scheduleItem => scheduleItem !== null);
 
-                // return { ...scheduleItem.toObject(), slots: filteredSlots };
-                // });
-
-                // const scheduleData = response[0].schedule.map(scheduleItem => {
-                //     const filteredSlots = (scheduleItem.slots || []).filter(slot => {
-                //         if (slot && scheduleItem.date && slot.time && slot.possibility !== 0) {
-                //             const slotDateTime = new Date(scheduleItem.date);
-                //             const [timeStart, timeEnd] = slot.time.split('-')[0].split(':').map(Number);
-                //             // console.log(timeStart);
-                //             const hoursStart = timeStart % 12 + 12;
-                //             const currentDay = currentDate.getDate();
-                //             const currentHours = currentDate.getHours();
-
-                //             // Extract date and hours from slotDateTime
-                //             slotDateTime.setHours(hoursStart, 0);
-                //             const slotDay = slotDateTime.getDate();
-                //             let slotHours = slotDateTime.getHours();
-                //             // slotHours = slotHours % 12 + slotHours;
-
-                //             // Compare the date and hours
-                //             if (currentDay == slotDay) {
-                //                 console.log(slotHours);
-                //                 return (currentHours < slotHours)
-                //             }
-                //             else {
-                //                 return true
-                //             }
-
-                //             // slotDateTime.setHours(hours);
-                //             // slotDateTime.setMinutes(minutes);
-                //             // return currentDate.getTime() <= slotDateTime.getTime();
-                //         }
-                //         return false;
-                //     }).map(filteredSlot => {
-                //         if (filteredSlot) {
-                //             return { ...filteredSlot.toObject() };
-                //         }
-                //         return filteredSlot;
-                //     });
-
-                //     return { ...scheduleItem.toObject(), slots: filteredSlots };
-                // });
 
                 return res.status(200).send({
                     statusCode: 200,
@@ -563,6 +490,7 @@ async function verifyOtpController(req, res) {
                             message: 'You have successfully logged In',
                             token: jwtToken,
                             name: existingUser.name,
+                            email: existingUser.username,
                             address: existingUser.address[0]
                             // result: existingUser
                         });
@@ -573,6 +501,7 @@ async function verifyOtpController(req, res) {
                         statusCode: 203,
                         message: 'Please add Address',
                         token: jwtToken,
+                        email: existingUser.username,
                         name: existingUser.name
                         // result: existingUser
                     });
@@ -713,7 +642,7 @@ async function updateUsernameController(req, res) {
     if (isNotValidSchema(error, res)) return;
     try {
         console.log("validation and schema done");
-        const result = await userDao.updateUsernameDao(loginInfo, res);
+        const result = await userDao.updateUsernameDao(req, res);
         return result;
     } catch (error) {
         log.error(`Error in updating user details` + error);
@@ -729,7 +658,7 @@ async function updateNameController(req, res) {
     if (isNotValidSchema(error, res)) return;
 
     try {
-        const result = await userDao.updateUsernameDao(loginInfo, res);
+        const result = await userDao.updateUsernameDao(req, res);
         return result;
     } catch (error) {
         log.error(`Error in controller while updating name` + error)

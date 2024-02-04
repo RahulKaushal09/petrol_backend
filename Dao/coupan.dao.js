@@ -5,7 +5,6 @@ const log = new Logger('Coupan_Dao');
 const { CoupanModel } = require('../models/coupan.schemaModel');
 const { FuelModel } = require('../models/fuel.schemaModel');
 
-const secretKey = "12345"
 
 async function findCoupanByCode(coupanInfo, res) {
     try {
