@@ -4,7 +4,6 @@ const log = new Logger('Coupan_Dao');
 // const { UserModel } = require('../models/user.schemaModel')
 const { FuelModel } = require('../models/fuel.schemaModel');
 
-const secretKey = "12345"
 
 async function getAllfuels(req, res) {
     log.success('dao layer entered');

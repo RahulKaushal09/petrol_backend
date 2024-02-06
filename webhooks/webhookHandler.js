@@ -20,7 +20,7 @@ exports.handleWebhookEvent = async (request, response) => {
 
     try {
         // console.log(request.body)
-        console.log(typeof (request.body));
+
         event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
     } catch (err) {
         console.log(err);
