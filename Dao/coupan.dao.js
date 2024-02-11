@@ -61,7 +61,6 @@ async function findCoupanByCode(coupanInfo, res) {
                             });
                         }
                         rate = parseFloat(rate.replace('$', ''));
-
                         let totalAmount = parseFloat(coupanInfo.order.fuelAmount) * rate;
                         console.log(parseFloat(coupanInfo.order.fuelAmount));
                         // console.log({ totalAmount });
@@ -73,6 +72,9 @@ async function findCoupanByCode(coupanInfo, res) {
                         discountValue = discountValue - totalAmount;
                         totalAmount = parseFloat(totalAmount.toFixed(2));
                         discountValue = parseFloat(discountValue.toFixed(2));
+                        if (coupanInfo.order.isEmergency) {
+                            totalAmount += 20;
+                        }
                         console.log({ totalAmount });
 
                         log.success('Successfully fetched the coupan with the given code : ' + coupanInfo.code);
@@ -104,7 +106,30 @@ async function getAllCoupansDao(coupanInfo, res) {
     // console.log({ coupanInfo });
     // const response = await getFunction(phoneNo);
     // console.log({ response });
-    return await CoupanModel.find({ status: "true" }, (err, response) => {
+    return await CoupanModel.find({ status: true }, (err, response) => {
+        log.success('dao querry layer entered');
+        if (err || !response) {
+            log.error(`failed in the query in dao layer ` + err);
+            return res.status(404).send({
+                message: 'No Coupan Found',
+                statusCode: 404
+            })
+        }
+        console.log({ response });
+        log.success('Successfully fetched all the coupans with given phoen no');
+        res.status(200).send({
+            message: 'Successfully fetched all the coupans',
+            result: response,
+            statusCode: 200
+        })
+    })
+}
+async function getAllCoupansAdminDao(coupanInfo, res) {
+    log.success('dao layer entered');
+    // console.log({ coupanInfo });
+    // const response = await getFunction(phoneNo);
+    // console.log({ response });
+    return await CoupanModel.find({}, (err, response) => {
         log.success('dao querry layer entered');
         if (err || !response) {
             log.error(`failed in the query in dao layer ` + err);
@@ -141,7 +166,7 @@ async function editCoupanDao(coupanInfo, res) {
         else {
             return res.status(200).send({
                 statusCode: 200,
-                message: 'coupan status upgraded'
+                message: 'Coupon Status Upgraded'
             })
 
         }
@@ -164,7 +189,7 @@ async function addCoupanDao(coupanInfo, res) {
             let newCoupan = new CoupanModel({
                 "name": coupanInfo.name,
                 "code": coupanInfo.code,
-                "discount": coupanInfo.discount,
+                "discount": coupanInfo.discount.toString() + "%",
                 "status": coupanInfo.status
             });
 
@@ -195,5 +220,6 @@ module.exports = {
     addCoupanDao,
     getAllCoupansDao,
     findCoupanByCode,
+    getAllCoupansAdminDao,
     editCoupanDao
 }

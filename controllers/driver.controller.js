@@ -44,6 +44,9 @@ async function driverLoginController(req, res) {
         return result;
     } catch (error) {
         log.error(`Error in loggin in the driver`);
+        res.status(400).send({
+            message: "Something Went Wrong!!"
+        })
     }
 }
 
@@ -51,6 +54,15 @@ async function getAllOrdersController(req, res) {
     // const driverInfo = req.params.phoneNo;
     try {
         const result = await driverDao.getAllOrdersDao(req, res);
+        return result;
+    } catch (error) {
+        log.error(`Error in the controller of getall orders`)
+    }
+}
+async function getAllOrdersCompleteController(req, res) {
+    // const driverInfo = req.params.phoneNo;
+    try {
+        const result = await driverDao.getAllOrdersCompleteDao(req, res);
         return result;
     } catch (error) {
         log.error(`Error in the controller of getall orders`)
@@ -79,6 +91,36 @@ async function getOrdersController(req, res) {
         log.error(`Error in the getorderscontroller`);
     }
 }
+async function getOrdersBulkController(req, res) {
+    // console.log(req);
+    console.log("flagger");
+    try {
+        const result = await driverDao.getordersBulkDao(req, res);
+        return result;
+    } catch (error) {
+        log.error(`Error in the getorderscontroller`);
+    }
+}
+async function getAllOrderNumberController(req, res) {
+    // console.log(req);
+    console.log("flagger");
+    try {
+        const result = await driverDao.getAllOrderNumberDoa(req, res);
+        return result;
+    } catch (error) {
+        log.error(`Error in the getorderscontroller`);
+    }
+}
+async function getOrdersNormalController(req, res) {
+    // console.log(req);
+    console.log("flagger");
+    try {
+        const result = await driverDao.getordersNormalDao(req, res);
+        return result;
+    } catch (error) {
+        log.error(`Error in the getorderscontroller`);
+    }
+}
 
 async function addDriversController(req, res) {
     console.log("abcc");
@@ -91,6 +133,19 @@ async function addDriversController(req, res) {
     try {
         console.log("check3");
         const response = await driverDao.addDriversDao(driverInfo, res);
+        return response;
+    } catch (error) {
+        log.error(`Error in adding new order for phoneNO ${driverInfo.phoneNo}` + error)
+    }
+    // return res.send("testing")
+}
+async function getDriversController(req, res) {
+
+    console.log("check");
+    // console.log("check2");
+    try {
+        console.log("check3");
+        const response = await driverDao.getDriversDao(req, res);
         return response;
     } catch (error) {
         log.error(`Error in adding new order for phoneNO ${driverInfo.phoneNo}` + error)
@@ -142,5 +197,10 @@ module.exports = {
     updateAssignedOrdersController,
     getOnlyPetrolController,
     adminSystemStatus,
+    getDriversController,
+    getOrdersBulkController,
+    getOrdersNormalController,
+    getAllOrderNumberController,
+    getAllOrdersCompleteController,
     addAdmin
 };

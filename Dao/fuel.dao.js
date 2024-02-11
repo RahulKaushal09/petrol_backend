@@ -29,6 +29,33 @@ async function getAllfuels(req, res) {
         })
     })
 }
+async function getAllfuelsAdmin(req, res) {
+    log.success('dao layer entered');
+    // console.log({ fuelInfo });
+    return await FuelModel.find({}, (err, response) => {
+        log.success('dao querry layer entered');
+        if (err || !response) {
+            log.error(`failed in the query in dao layer ` + err);
+            return res.status(404).send({
+                message: 'Something went wrong',
+                statusCode: 404
+            })
+        }
+
+        let result = { petrol: {}, diesel: {}, premium: {} };
+        petrol = parseFloat(response[0].petrol.replace('$', ''));
+        diesel = parseFloat(response[0].diesel.replace('$', ''));
+        premium = parseFloat(response[0].premium.replace('$', ''));
+        result.petrol = petrol;
+        result.diesel = diesel;
+        result.premium = premium;
+        log.success('Successfully fetched all the fuels with given phoen no');
+        res.status(200).send({
+            statusCode: 200,
+            result: result
+        })
+    })
+}
 
 async function updateFuelDao(fuelInfo, res) {
     // const phoneNo = fuelInfo.phoneNo;
@@ -59,9 +86,9 @@ async function addFuelDao(fuelInfo, res) {
     const filter = {}; // Add appropriate filtering criteria based on your data structure
     const update = {
         $set: {
-            "petrol": fuelInfo.petrol,
-            "diesel": fuelInfo.diesel,
-            "premium": fuelInfo.premium
+            "petrol": "$" + fuelInfo.petrol.toString(),
+            "diesel": "$" + fuelInfo.diesel.toString(),
+            "premium": "$" + fuelInfo.premium.toString()
         }
     };
 
@@ -88,5 +115,6 @@ async function addFuelDao(fuelInfo, res) {
 module.exports = {
     addFuelDao,
     getAllfuels,
+    getAllfuelsAdmin,
     updateFuelDao
 }

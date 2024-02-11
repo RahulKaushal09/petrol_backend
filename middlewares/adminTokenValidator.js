@@ -14,7 +14,7 @@ async function adminTokenValidator(req, res, next) {
     }
     try {
         const payload = jwt.verify(token, secretKey);
-        console.log({ payload });
+        console.log({ token });
 
         if (payload.role == "admin") {
             next();
@@ -25,32 +25,7 @@ async function adminTokenValidator(req, res, next) {
                 message: 'Access denied invalid authentication token'
             });
         }
-        // const username = payload.username;
-        // const username = payload.username;
-        // const password = payload.password;
 
-        // await AdminModel.findOne(
-        //     {
-        //         username: username
-        //     },
-        //     async (err, response) => {
-        //         console.log("point");
-        //         console.log({ response });
-        //         if (err || !response) {
-        //             return res.status(403).send({
-        //                 message: 'validation error with token'
-        //             })
-        //         }
-        //         const temp = await bcrypt.compare(password, response.password);
-        //         if (!temp) {
-        //             return res.status(403).send({
-        //                 message: 'validation error with token'
-        //             })
-        //         }
-        //         else {
-        //             next();
-        //         }
-        //     })
     } catch (err) {
         return res.status(403).send({
             message: 'Access denied invalid authentication token'

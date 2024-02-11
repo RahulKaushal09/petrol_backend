@@ -29,6 +29,16 @@ async function getAllfuelsController(req, res) {
         log.error(`Error in Dao trycatch layer ` + error)
     }
 }
+async function getAllfuelsAdminController(req, res) {
+    log.info('controller entered');
+    // const fuelInfo = req.params.phoneNo;
+    try {
+        const result = await fuelDao.getAllfuelsAdmin(req, res);
+        return result;
+    } catch (error) {
+        log.error(`Error in Dao trycatch layer ` + error)
+    }
+}
 
 async function updateFuelController(req, res) {
     const fuelInfo = req.body;
@@ -59,5 +69,6 @@ function isNotValidSchema(error, res) {
 module.exports = {
     createFuelController,
     getAllfuelsController,
+    getAllfuelsAdminController,
     updateFuelController
 };

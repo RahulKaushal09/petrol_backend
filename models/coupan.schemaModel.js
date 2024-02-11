@@ -5,7 +5,7 @@ const log = new Logger('Coupan_SchemaModel');
 
 const editCoupanSchemaModel = {
     code: Joi.string().required().max(50),
-    status: Joi.string().required().max(50)
+    status: Joi.boolean().required()
 }
 const findCoupanSchemaModel = {
 
@@ -13,6 +13,7 @@ const findCoupanSchemaModel = {
     order: {
         fuelType: Joi.string().required(),
         fuelAmount: Joi.string().required(),
+        isEmergency: Joi.boolean().allow()
 
     }
 
@@ -20,11 +21,8 @@ const findCoupanSchemaModel = {
 }
 const addCoupanSchemaModel = {
     name: Joi.string().required().max(50),
-    // phoneNo: Joi.string().required().max(50),
     code: Joi.string().required().max(50),
-    discount: Joi.string().required().max(50),
-    // validTill: Joi.string().required().max(50),
-    // limit: Joi.string().required().max(50),
+    discount: Joi.number().required(),
     status: Joi.string().required().max(50)
 }
 
@@ -39,7 +37,7 @@ const mongoCoupanSchema = new mongoose.Schema({
     discount: String,
     // validTill: String,
     // limit: String,
-    status: String
+    status: Boolean
 });
 
 const CoupanModel = mongoose.model('Coupan', mongoCoupanSchema);

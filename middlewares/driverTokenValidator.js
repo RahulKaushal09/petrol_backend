@@ -3,11 +3,11 @@ const jwt = require('jsonwebtoken');
 const { DriverModel } = require('../models/driverSchema')
 const bcrypt = require('bcrypt');
 
-const secretKey = "12345";
+const secretKey = "123456789";
 
 async function driverTokenValidator(req, res, next) {
     const token = req.header('x-auth-token');
-    console.log("check", { token });
+    console.log((!token));
     if (!token) {
         return res.status(403).send({
             message: 'Access denied authentication token not found'
@@ -15,7 +15,7 @@ async function driverTokenValidator(req, res, next) {
     }
     try {
         const payload = jwt.verify(token, secretKey);
-        console.log({ payload });
+        console.log(payload);
         if (payload.role == "driver") {
             next();
         }

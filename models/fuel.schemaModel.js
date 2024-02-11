@@ -5,9 +5,9 @@ const log = new Logger('Fuel_SchemaModel');
 
 const addFuelSchemaModel = {
     // phoneNo: Joi.string(),
-    petrol: Joi.string().required().max(10),
-    diesel: Joi.string().required().max(10),
-    premium: Joi.string().required().max(10)
+    petrol: Joi.number().required().max(10),
+    diesel: Joi.number().required().max(10),
+    premium: Joi.number().required().max(10)
 }
 
 const updateFuelSchemaModel = {

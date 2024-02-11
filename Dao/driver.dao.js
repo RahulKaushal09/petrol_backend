@@ -15,14 +15,15 @@ async function adminChangeSystemStatus(systemInfo, res) {
         async (err, response) => {
             if (err) {
                 log.error(`error in updating the system status ->` + err);
-                res.status(420).send({
-                    message: 'error in updating the system status'
+                res.status(400).send({
+                    statusCode: 400,
+                    message: 'Error Happened!!'
                 })
             }
             else {
                 return res.status(200).send({
                     statusCode: 200,
-                    message: 'System status updated successfully',
+                    message: 'System status updated!!',
                     result: response
                 })
             }
@@ -84,6 +85,7 @@ async function driverLoginDao(driverInfo, res) {
                 const temp = await bcrypt.compare(password, response.password);
                 if (!temp) {
                     return res.status(403).send({
+                        statusCode: 403,
                         message: 'validation error with token'
                     })
                 }
@@ -94,10 +96,13 @@ async function driverLoginDao(driverInfo, res) {
                             "role": "admin"
                         },
                         secretKey,
-                        // { expiresIn: "90d" }
+
                     );
                     return res.header('x-auth-token', jwtToken).status(200).send({
-                        message: 'Logged In as admin successfully!',
+                        statusCode: 200,
+                        token: jwtToken,
+                        role: "admin",
+                        message: 'Welcome Admin :)',
                         result: response
                     })
                 }
@@ -108,15 +113,17 @@ async function driverLoginDao(driverInfo, res) {
             async (err, response) => {
                 if (err || !response) {
                     log.error(`error in finding the username` + err);
-                    res.status(404).send({
-                        message: 'error in logging in!'
+                    res.status(400).send({
+                        statusCode: 400,
+                        message: 'Error While Loggin!!'
                     })
                 }
                 const isPasswordCorrect = await bcrypt.compare(password, response.password);
                 if (!isPasswordCorrect) {
                     log.info(`Incorrect password`);
-                    return res.status(400).send({
-                        message: 'incorrect password'
+                    return res.status(403).send({
+                        statusCode: 403,
+                        message: 'Incorrect password'
                     })
                 }
                 const jwtToken = jwt.sign(
@@ -128,7 +135,10 @@ async function driverLoginDao(driverInfo, res) {
                     // { expiresIn: "90d" }
                 );
                 return res.header('x-auth-token', jwtToken).status(200).send({
-                    message: 'Logged In as driver successfully!',
+                    message: 'Logged In successfully!',
+                    statusCode: 200,
+                    role: "driver",
+                    token: jwtToken,
                     result: response
                 })
             })
@@ -228,19 +238,73 @@ async function getAllOrdersDao(driverInfo, res) {
         if (err || !response) {
             log.error(`error in the querry of get orders dao` + err);
             return res.status(404).send({
-                message: 'error in fetching orders'
+                statusCode: 404,
+                message: 'Error in fetching orders'
             })
         }
+        let array = [];
+        for (let i = 0; i < response.length; i++) {
+            const orderArrSize = response[i].order.length;
+            for (let j = 0; j < orderArrSize; j++) {
+                // console.log(response[i].order[j].assignedTo, "aabb");
+                array.push(response[i].order[j]);
+            }
+        }
+        array.sort((a, b) => {
+            const dateComparison = new Date(a.Date) - new Date(b.Date);
+            if (dateComparison !== 0) {
+                return dateComparison;
+            }
+            return a.preferredTiming.localeCompare(b.preferredTiming);
+        });
         log.info(`successfully fetched orders for all drivers`);
         return res.status(200).send({
             statusCode: 200,
-            message: 'Successfully fetched all orders',
-            result: response
+            message: '',
+            result: array
         })
     })
     return result;
 }
 
+async function getAllOrdersCompleteDao(req, res) {
+    const result = await orderModel.find({}, (err, response) => {
+        if (err || !response) {
+            log.error(`error in the querry of get orders dao` + err);
+            return res.status(404).send({
+                message: 'error in fetching orders'
+            })
+        }
+        else {
+            console.log({ response });
+            let array = [];
+            for (let i = 0; i < response.length; i++) {
+                const orderArrSize = response[i].order.length;
+                for (let j = 0; j < orderArrSize; j++) {
+                    // console.log(response[i].order[j].assignedTo, "aabb");
+                    if (response[i].order[j].status == "complete") {
+                        array.push(response[i].order[j]);
+                    }
+                }
+            }
+            array.sort((a, b) => {
+                const dateComparison = new Date(b.Date) - new Date(a.Date); // Reverse comparison for descending order
+                if (dateComparison !== 0) {
+                    return dateComparison;
+                }
+                return b.preferredTiming.localeCompare(a.preferredTiming); // Reverse comparison for descending order
+            });
+            console.log(array);
+            log.info(`successfully fetched Complete Orders`);
+            return res.status(200).send({
+                statusCode: 200,
+                message: 'Successfully fetched all orders',
+                result: array
+            })
+        }
+    })
+    return result;
+}
 async function getordersDao(driverInfo, res) {
     const phoneNo = driverInfo;
     const result = await orderModel.find({ 'order.assignedTo': phoneNo }, (err, response) => {
@@ -268,6 +332,128 @@ async function getordersDao(driverInfo, res) {
                 statusCode: 200,
                 message: 'Successfully fetched all orders',
                 result: array
+            })
+        }
+    })
+    return result;
+}
+async function getordersNormalDao(req, res) {
+    const result = await orderModel.find({}, (err, response) => {
+        if (err || !response) {
+            log.error(`error in the querry of get orders dao` + err);
+            return res.status(404).send({
+                message: 'error in fetching orders'
+            })
+        }
+        else {
+            console.log({ response });
+            let array = [];
+            for (let i = 0; i < response.length; i++) {
+                const orderArrSize = response[i].order.length;
+                for (let j = 0; j < orderArrSize; j++) {
+                    // console.log(response[i].order[j].assignedTo, "aabb");
+                    if (parseInt(response[i].order[j].fuelAmount) < 500 && response[i].order[j].status == "pending") {
+                        array.push(response[i].order[j]);
+                    }
+                }
+            }
+            array.sort((a, b) => {
+                const dateComparison = new Date(a.Date) - new Date(b.Date);
+                if (dateComparison !== 0) {
+                    return dateComparison;
+                }
+                return a.preferredTiming.localeCompare(b.preferredTiming);
+            });
+            console.log(array);
+            log.info(`successfully fetched Normal Orders`);
+            return res.status(200).send({
+                statusCode: 200,
+                message: '',
+                result: array
+            })
+        }
+    })
+    return result;
+}
+async function getordersBulkDao(req, res) {
+    const result = await orderModel.find({}, (err, response) => {
+        if (err || !response) {
+            log.error(`error in the querry of get orders dao` + err);
+            return res.status(404).send({
+                message: 'error in fetching orders'
+            })
+        }
+        else {
+            console.log({ response });
+            let array = [];
+            for (let i = 0; i < response.length; i++) {
+                const orderArrSize = response[i].order.length;
+                for (let j = 0; j < orderArrSize; j++) {
+                    // console.log(response[i].order[j].assignedTo, "aabb");
+                    if (parseInt(response[i].order[j].fuelAmount) >= 500) {
+                        array.push(response[i].order[j]);
+                    }
+                }
+            }
+            array.sort((a, b) => {
+                const dateComparison = new Date(a.Date) - new Date(b.Date);
+                if (dateComparison !== 0) {
+                    return dateComparison;
+                }
+                return a.preferredTiming.localeCompare(b.preferredTiming);
+            });
+            console.log(array);
+            log.info(`successfully fetched orders for the bulk order`);
+            return res.status(200).send({
+                statusCode: 200,
+                message: '',
+                result: array
+            })
+        }
+    })
+    return result;
+}
+async function getAllOrderNumberDoa(req, res) {
+    const result = await orderModel.find({}, (err, response) => {
+        if (err || !response) {
+            log.error(`error in the querry of get orders dao` + err);
+            return res.status(404).send({
+                message: 'error in fetching orders'
+            })
+        }
+        else {
+            let bulk = 0;
+            let normal = 0;
+            let complete = 0;
+            let total = 0;
+
+            console.log({ response });
+            let array = [];
+            for (let i = 0; i < response.length; i++) {
+                const orderArrSize = response[i].order.length;
+                total += orderArrSize
+                for (let j = 0; j < orderArrSize; j++) {
+                    // console.log(response[i].order[j].assignedTo, "aabb");
+                    if (parseInt(response[i].order[j].fuelAmount) >= 500) {
+                        bulk += 1;
+                    }
+                    if (parseInt(response[i].order[j].fuelAmount) < 500 && response[i].order[j].status == "pending") {
+                        normal += 1;
+                    }
+                    if (response[i].order[j].status == "complete") {
+                        complete += 1;
+                    }
+                }
+            }
+            log.info(`All numbers of orders Succesfully collected`);
+            return res.status(200).send({
+                statusCode: 200,
+                message: '',
+                result: array,
+                bulkOrders: bulk,
+                normalOrders: normal,
+                completeOrders: complete,
+                totalOrders: total,
             })
         }
     })
@@ -311,16 +497,19 @@ async function addDriversDao(driverInfo, res) {
     try {
 
         console.log({ driverInfo }, " dao layer entered");
-        const phoneNo = driverInfo.phoneNo;
+        // const phoneNo = driverInfo.phoneNo;
 
-        await DriverModel.findOne({ phoneNo: phoneNo }, async (err, response) => {
+        await DriverModel.findOne({}, async (err, response) => {
             if (err || !response) {
+                log.error("error while adding new driver!!!")
+                return res.status(400).send('Something Went Wrong');
+            }
+            else {
                 let newDriver = new DriverModel({
                     name: driverInfo.name,
                     username: driverInfo.username,
                     password: driverInfo.password,
-                    phoneNo: phoneNo,
-                    // assignedOrders: [{ _orderId: driverInfo.assignedOrders._orderId, }],
+                    phoneNo: driverInfo.phoneNo,
                 })
                 newDriver.password = await bcrypt.hash(driverInfo.password, 12);
                 console.log({ newDriver });
@@ -333,25 +522,56 @@ async function addDriversDao(driverInfo, res) {
                             })
                         }
                         log.info(`Successfully saved the driver info in the db`);
-                        return res.send({
-                            message: 'Successfully saved the data in db'
+                        return res.status(200).send({
+                            statusCode: 200,
+                            message: 'New Driver Created'
                         })
                     })
                     return result;
                 }
                 registerNewUser();
-            }
-            else {
-                return res.status(409).send({
-                    message: 'driver already exists with this phoneNo',
-                    result: response
-                })
+                // return res.status(400).send({
+                //     statusCode: 400,
+                //     message: 'Driver already exists',
+                //     result: response
+                // })
             }
         })
     } catch (error) {
-        log.error('error while adding new driver')
+        log.error('error while adding new driver ' + error)
         return res.status(400).send({
-            message: 'error while adding new driver' + error,
+            statusCode: 400,
+            message: 'error while adding new driver',
+        })
+    }
+}
+async function getDriversDao(req, res) {
+    try {
+
+        console.log("all driver dao layer entered");
+
+        await DriverModel.find({}, async (err, response) => {
+            if (err || !response) {
+                log.error(`error in the querry of get all driver dao` + err);
+                return res.status(404).send({
+                    message: 'Cant Find Drivers'
+                })
+            }
+            else {
+                log.info(`successfully fetched all driver`);
+                return res.status(200).send({
+                    statusCode: 200,
+                    message: '',
+                    result: response
+                })
+            }
+
+        })
+    } catch (error) {
+        log.error('error while adding new driver ' + error)
+        return res.status(400).send({
+            statusCode: 400,
+            message: 'error while adding new driver',
         })
     }
 }
@@ -361,9 +581,14 @@ module.exports = {
     driverLoginDao,
     getordersDao,
     getAllOrdersDao,
+    getAllOrderNumberDoa,
     adminLoginDao,
     updateDriverDao,
     getPetrolDao,
+    getordersNormalDao,
+    getAllOrdersCompleteDao,
     adminChangeSystemStatus,
+    getordersBulkDao,
+    getDriversDao,
     addAdminDao
 }

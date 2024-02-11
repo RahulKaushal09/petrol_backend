@@ -63,6 +63,17 @@ async function getAllCoupansController(req, res) {
         log.error(`Error in Dao trycatch layer ` + error)
     }
 }
+async function getAllCoupansAdminController(req, res) {
+    log.info('controller entered');
+    const coupanInfo = req;
+
+    try {
+        const result = await coupanDao.getAllCoupansAdminDao(coupanInfo, res);
+        return result;
+    } catch (error) {
+        log.error(`Error in Dao trycatch layer ` + error)
+    }
+}
 // async function getAllOrdersController(req, res) {
 //     console.log("controller checkpoint");
 //     const loginInfo = req.params;
@@ -93,5 +104,6 @@ module.exports = {
     addCoupanController,
     getAllCoupansController,
     findCoupanController,
+    getAllCoupansAdminController,
     editCoupanStatus
 };

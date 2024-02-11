@@ -36,13 +36,14 @@ exports.handleWebhookEvent = async (request, response) => {
         case 'checkout.session.completed':
             const session = event.data.object;
             orderDetail = session.metadata;
-            if (orderDetails == null && token == null) {
 
-                orderDetails = JSON.parse(orderDetail.OrderDetails);
-                token = orderDetail.token;
-            }
+
+            orderDetails = JSON.parse(orderDetail.OrderDetails);
+            token = orderDetail.token;
+
             const transactionId = session.payment_intent || session.payment_intent;
             orderDetails.order.transactionId = transactionId;
+            handleOrderWebhook();
             // console.log(transactionId);
 
 
@@ -51,7 +52,6 @@ exports.handleWebhookEvent = async (request, response) => {
         case 'payment_intent.created':
             // Route the order event to the appropriate handler
             // console.log(orderDetails);
-            handleOrderWebhook();
             break;
 
         default:
