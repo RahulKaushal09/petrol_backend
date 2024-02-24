@@ -3,7 +3,7 @@ const { SystemStatusModel } = require("../models/driverSchema");
 const checkSystemStatusMiddleware = async (req, res, next) => {
     try {
         const systemStatus = await SystemStatusModel.findOne({});
-        if (systemStatus && systemStatus.status === 'ON') {
+        if (systemStatus && systemStatus.status === true) {
             // If the system status is 'ON', allow the request to proceed
             next();
         } else {

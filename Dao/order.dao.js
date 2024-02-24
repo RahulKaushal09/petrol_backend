@@ -35,6 +35,61 @@ async function getAllOrdersDao(req, res) {
             })
         }
         else {
+            let array = response.order;
+            array.sort((a, b) => {
+                const dateA = new Date(a.Date);
+                const dateB = new Date(b.Date);
+
+                // Check for emergencies
+                const emergencyA = a.emergency || false;
+                const emergencyB = b.emergency || false;
+
+                // If either is an emergency, prioritize it regardless of date
+                if (emergencyA && !emergencyB) {
+                    return -1; // Emergency A comes first
+                } else if (!emergencyA && emergencyB) {
+                    return 1; // Emergency B comes first
+                } else {
+                    // If both are emergencies, maintain the original order
+                    if (emergencyA && emergencyB) {
+                        return 0;
+                    }
+
+                    // If not emergencies and both don't have preferred timings, maintain the original order
+                    if ((!a.preferredTiming || !b.preferredTiming) && !emergencyA && !emergencyB) {
+                        return 0;
+                    }
+
+                    // If only one case has a preferred timing, prioritize it
+                    if (!a.preferredTiming && b.preferredTiming) {
+                        return 1;
+                    } else if (a.preferredTiming && !b.preferredTiming) {
+                        return -1;
+                    }
+
+                    // If both cases have preferred timings, compare dates first, and then preferred timings
+                    if (dateA > dateB) {
+                        return -1;
+                    } else if (dateA < dateB) {
+                        return 1;
+                    } else {
+                        // Dates are equal, compare preferred timings
+                        const timeA = parseInt(a.preferredTiming.split("-")[0]);
+                        const timeB = parseInt(b.preferredTiming.split("-")[0]);
+
+                        // Compare preferred timings
+                        if (timeA > timeB) {
+                            return 1;
+                        } else if (timeA < timeB) {
+                            return -1;
+                        } else {
+                            // If preferred timings are also equal, maintain the original order
+                            return 0;
+                        }
+                    }
+                }
+            });
+            response.order = array;
             log.info(`Found a order with phone No ${phoneNo}`);
             return res.status(200).send({
                 statusCode: 200,
@@ -46,23 +101,59 @@ async function getAllOrdersDao(req, res) {
     })
 }
 
-async function getOrdersByIdDao(orderInfo, res) {
+async function getaddressByIdDao(req, res) {
     // const _orderId = orderInfo._orderId;
+    const addressId = req.body.addressId;
+    await UserModel.findOne({ 'address._id': addressId }, async (err, response) => {
+        if (err || !response) {
+            log.error(`Error in finding user with ${addressId}` + err);
+            return res.status(400).send({
+                username: addressId,
+                statusCode: 400,
+                message: 'No Address Found'
+            });
+        }
+        else {
+            // console.log(response);
+            let array = [];
+            // console.log(response.address);s
+            for (let i = 0; i < response.address.length; i++) {
+                if (response.address[i]._id == addressId) {
+                    array.push(response.address[i]);
+                    break;
+                }
+            }
+            console.log(array);
+            log.info(`Foudn a user with data ${addressId}`);
+            return res.status(200).send({
+                statusCode: 200,
+                // username: username,
+                result: array[0],
+                message: 'Found a user with ' + addressId
+            })
+        }
+    })
+
     // console.log({ _orderId });
 }
 
-async function updateOrderStatusDao(orderInfo, res) {
+async function updateOrderStatusDao(req, res) {
+    const orderInfo = req.body;
     const status = orderInfo.status;
-    const phoneNo = orderInfo.phoneNo;
+    const fuelAmount = orderInfo.fuelAmount;
+    const totalAmount = orderInfo.totalAmount;
     const orderID = orderInfo.orderID;
+    const username = req.username
     const result = await orderModel.findOneAndUpdate(
         {
-            phoneNo: phoneNo,
             "order._id": orderID
         },
         {
             $set: {
                 "order.$.status": status,
+                "order.$.totalAmount": totalAmount,
+                "order.$.fuelAmount": fuelAmount,
+                "order.$.driver": username,
             }
         },
         { new: true, upsert: true },
@@ -78,7 +169,7 @@ async function updateOrderStatusDao(orderInfo, res) {
                 log.info(`Successfully updated order status `);
                 return res.status(200).send({
                     statusCode: 200,
-                    message: 'Successfully updated order status'
+                    message: 'Successfully delivered Order'
                 })
             }
 
@@ -716,6 +807,7 @@ async function addOrderDao(token, order) {
             log.error("payload not found while ordering 1")
         }
         order = order.order;
+        order.driver = "";
         const reqAdr = order.addressId;
         let Order = order;
         console.log(reqAdr);
@@ -924,6 +1016,7 @@ async function addOrderDao(token, order) {
                                                 "status": order.status,
                                                 "paymentMethod": order.paymentMethod,
                                                 "paymentIntentId": "cod",
+                                                "driver": order.driver,
                                                 "totalAmount": totalAmount
                                             };
                                         }
@@ -1133,6 +1226,7 @@ async function addOrderDao(token, order) {
                                         "addressId": order.addressId,
                                         "status": order.status,
                                         "paymentMethod": order.paymentMethod,
+                                        "driver": order.driver,
                                         "paymentIntentId": "cod",
                                         "totalAmount": -1
                                     };
@@ -1150,6 +1244,7 @@ async function addOrderDao(token, order) {
                                         "addressId": order.addressId,
                                         "status": order.status,
                                         "paymentMethod": order.paymentMethod,
+                                        "driver": order.driver,
                                         "paymentIntentId": "cod",
                                         "totalAmount": totalAmount
                                     };
@@ -1425,6 +1520,7 @@ async function addOrderDao(token, order) {
                                             "addressId": order.addressId,
                                             "status": order.status,
                                             "paymentMethod": order.paymentMethod,
+                                            "driver": order.driver,
                                             "paymentIntentId": "cod",
                                             "totalAmount": -1
                                         };
@@ -1442,6 +1538,7 @@ async function addOrderDao(token, order) {
                                             "addressId": order.addressId,
                                             "status": order.status,
                                             "paymentMethod": order.paymentMethod,
+                                            "driver": order.driver,
                                             "paymentIntentId": "cod",
                                             "totalAmount": totalAmount
                                         };
@@ -1651,6 +1748,7 @@ async function addOrderDao(token, order) {
                                     "addressId": order.addressId,
                                     "status": order.status,
                                     "paymentMethod": order.paymentMethod,
+                                    "driver": order.driver,
                                     "paymentIntentId": "cod",
                                     "totalAmount": -1
                                 };
@@ -1668,6 +1766,7 @@ async function addOrderDao(token, order) {
                                     "addressId": order.addressId,
                                     "status": order.status,
                                     "paymentMethod": order.paymentMethod,
+                                    "driver": order.driver,
                                     "paymentIntentId": "cod",
                                     "totalAmount": totalAmount
                                 };
@@ -1828,8 +1927,15 @@ async function updatedScheduleDao() {
         }
 
         // Get today's date
-        const today = new Date();
+        const today = new Date(formatDate(new Date()));
+        const firstDateInSlot = new Date(existingData[0].schedule[0].showDate);
+        const differenceInDates = Math.abs(today - firstDateInSlot);
 
+        // Convert milliseconds to days
+        var daysDifference = Math.ceil(differenceInDates / (1000 * 60 * 60 * 24));
+        // console.log(today);
+        // console.log(firstDateInSlot);
+        // console.log(daysDifference);
         // Shift the data for each day and add a new entry for the upcoming day
         // console.log(existingData[0].schedule);
         for (let i = 0; i < 4; i++) {
@@ -1840,13 +1946,13 @@ async function updatedScheduleDao() {
             const showDate_ = formatDate(currentDate);
 
             // Shift the data for each day
-            if (i < 3) {
-                existingData[0].schedule[i].date = existingData[0].schedule[i + 1].date;
-                existingData[0].schedule[i].slots = existingData[0].schedule[i + 1].slots.map(slot => ({ ...slot }));
-                existingData[0].schedule[i].showDate = existingData[0].schedule[i + 1].showDate;
+            if (i < 4 - daysDifference) {
+                existingData[0].schedule[i].date = existingData[0].schedule[i + daysDifference].date;
+                existingData[0].schedule[i].slots = existingData[0].schedule[i + daysDifference].slots.map(slot => ({ ...slot }));
+                existingData[0].schedule[i].showDate = existingData[0].schedule[i + daysDifference].showDate;
             } else {
                 // For the last day, add a new entry for the upcoming day
-                existingData[0].schedule[i].date = formattedDate;
+                existingData[0].schedule[i].date = currentDate;
                 existingData[0].schedule[i].showDate = showDate_;
                 existingData[0].schedule[i].slots.forEach(slot => {
                     slot.petrol = 0; // Reset petrol for the new day 
@@ -1981,7 +2087,7 @@ module.exports = {
     addOrderDao,
     updateOrderDetailsDao,
     updateOrderStatusDao,
-    getOrdersByIdDao,
+    getaddressByIdDao,
     updatedScheduleDao,
     createOrUpdateScheduleDao
 }

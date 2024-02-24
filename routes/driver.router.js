@@ -5,6 +5,7 @@ const {
     getOrdersController,
     getOrdersBulkController,
     getAllOrdersController,
+    adminGetSystemStatus,
     getAllOrdersCompleteController,
     adminLoginController,
     adminSystemStatus,
@@ -23,12 +24,13 @@ const driverRouter = express.Router();
 
 //admin
 // driverRouter.post('/adminlogin', adminLoginController);//working
+driverRouter.get('/getSystemStatus', adminTokenValidator, adminGetSystemStatus);//working
 driverRouter.post('/changeSystemStatus', adminTokenValidator, adminSystemStatus);//working
 
 driverRouter.post('/addAdmin', addAdmin);// deprecated service
 driverRouter.post('/addDrivers', adminTokenValidator, addDriversController,);//frist driver
 driverRouter.get('/all', adminTokenValidator, getDriversController,);//frist driver
-// driverRouter.post('/updateAssignedOrders', adminTokenValidator, updateAssignedOrdersController);//working
+// driverRouter.post('/completeOrder', driverTokenValidator, checkSystemStatusMiddleware, updateAssignedOrdersController);//working
 
 // driverRouter.get('/getOrders/:phoneNo', adminTokenValidator, getOrdersController); // only assigned orders working
 driverRouter.get('/allOrderNumber/', adminTokenValidator, getAllOrderNumberController); // only assigned orders working

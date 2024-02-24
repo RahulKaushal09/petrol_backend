@@ -9,10 +9,33 @@ const secretKey = "12345";
 
 async function adminChangeSystemStatus(systemInfo, res) {
     const status = systemInfo.status;
-
+    // console.log(status);
     const result = await SystemStatusModel.findOneAndUpdate({}, { $set: { "status": status } }, { upsert: true, new: true },
 
         async (err, response) => {
+            if (err) {
+                log.error(`error in updating the system status ->` + err);
+                res.status(400).send({
+                    statusCode: 400,
+                    message: 'Error Happened!!'
+                })
+            }
+            else {
+                // console.log(response);
+                return res.status(200).send({
+                    statusCode: 200,
+                    message: 'System status updated!!',
+                    result: response
+                })
+            }
+        })
+    return result;
+}
+async function adminGetSystemStatusDao(req, res) {
+
+    const result = await SystemStatusModel.findOne({},
+
+        (err, response) => {
             if (err) {
                 log.error(`error in updating the system status ->` + err);
                 res.status(400).send({
@@ -79,6 +102,7 @@ async function driverLoginDao(driverInfo, res) {
             console.log("point");
             console.log({ response });
             if (err || !response) {
+
                 flag = true;
             }
             else {
@@ -112,10 +136,11 @@ async function driverLoginDao(driverInfo, res) {
         const result = await DriverModel.findOne({ username: username },
             async (err, response) => {
                 if (err || !response) {
+
                     log.error(`error in finding the username` + err);
-                    res.status(400).send({
+                    return res.status(400).send({
                         statusCode: 400,
-                        message: 'Error While Loggin!!'
+                        message: 'Error While Logging!!'
                     })
                 }
                 const isPasswordCorrect = await bcrypt.compare(password, response.password);
@@ -134,12 +159,14 @@ async function driverLoginDao(driverInfo, res) {
                     secretKey,
                     // { expiresIn: "90d" }
                 );
+                // console.log(response);
                 return res.header('x-auth-token', jwtToken).status(200).send({
                     message: 'Logged In successfully!',
                     statusCode: 200,
                     role: "driver",
                     token: jwtToken,
-                    result: response
+                    result: response,
+
                 })
             })
         return result;
@@ -147,11 +174,15 @@ async function driverLoginDao(driverInfo, res) {
 }
 
 
-async function updateDriverDao(driverInfo, res) {
+async function updateDriverDao(req, res) {
     console.log("check 2");
-    const phoneNo = driverInfo.phoneNo;
-    const _orderId = driverInfo._orderId;
-    const payload = await DriverModel.findOne({ phoneNo: phoneNo },
+    const _orderId = req._orderId;
+    const username = req.username
+    const payload = await orderModel.findOneAndUpdate(
+        { _id: _orderId }, // Search condition
+        { $set: { driver: username } }, // Update operation
+        { new: true } // To return the updated document
+        ,
         async (err, response) => {
             if (err || !response) {
                 log.error(`Cannot find a driver with this phoneNo` + err);
@@ -417,7 +448,8 @@ async function getAllOrderNumberDoa(req, res) {
     const result = await orderModel.find({}, (err, response) => {
         if (err || !response) {
             log.error(`error in the querry of get orders dao` + err);
-            return res.status(404).send({
+            return res.status(400).send({
+                statusCode: 400,
                 message: 'error in fetching orders'
             })
         }
@@ -428,7 +460,6 @@ async function getAllOrderNumberDoa(req, res) {
             let total = 0;
 
             console.log({ response });
-            let array = [];
             for (let i = 0; i < response.length; i++) {
                 const orderArrSize = response[i].order.length;
                 total += orderArrSize
@@ -449,11 +480,13 @@ async function getAllOrderNumberDoa(req, res) {
             return res.status(200).send({
                 statusCode: 200,
                 message: '',
-                result: array,
-                bulkOrders: bulk,
-                normalOrders: normal,
-                completeOrders: complete,
-                totalOrders: total,
+                result: {
+                    bulkOrders: bulk,
+                    normalOrders: normal,
+                    completeOrders: complete,
+                    totalOrders: total,
+                },
+
             })
         }
     })
@@ -589,6 +622,7 @@ module.exports = {
     getAllOrdersCompleteDao,
     adminChangeSystemStatus,
     getordersBulkDao,
+    adminGetSystemStatusDao,
     getDriversDao,
     addAdminDao
 }

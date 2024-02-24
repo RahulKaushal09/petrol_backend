@@ -6,6 +6,16 @@ const nodemailer = require("nodemailer");
 require('dotenv').config();
 // const jwt = require('jsonwebtoken');
 
+async function adminGetSystemStatus(req, res) {
+
+
+    try {
+        const result = await driverDao.adminGetSystemStatusDao(req, res);
+        return result;
+    } catch (error) {
+        log.error(`Error in loggin in the driver`);
+    }
+}
 async function adminSystemStatus(req, res) {
     const systemInfo = req.body;
     let { error } = driverValidator.validateSystemStatus(systemInfo, res);
@@ -43,7 +53,7 @@ async function driverLoginController(req, res) {
         const result = await driverDao.driverLoginDao(driverInfo, res);
         return result;
     } catch (error) {
-        log.error(`Error in loggin in the driver`);
+        log.error(`Error in logging in the driver`);
         res.status(400).send({
             message: "Something Went Wrong!!"
         })
@@ -154,12 +164,12 @@ async function getDriversController(req, res) {
 }
 
 async function updateAssignedOrdersController(req, res) {
-    const driverInfo = req.body;
-    let { error } = driverValidator.validateUpdateDriverOrderSchema(driverInfo, res);
+    let { error } = driverValidator.validateUpdateDriverOrderSchema(req, res);
+
     if (isNotValidSchema(error, res)) return;
     try {
         console.log("checkpoint 1");
-        const result = await driverDao.updateDriverDao(driverInfo, res);
+        const result = await driverDao.updateDriverDao(req, res);
         return result;
     } catch (error) {
         log.error(`Error in adding new order ` + error)
@@ -198,6 +208,7 @@ module.exports = {
     getOnlyPetrolController,
     adminSystemStatus,
     getDriversController,
+    adminGetSystemStatus,
     getOrdersBulkController,
     getOrdersNormalController,
     getAllOrderNumberController,

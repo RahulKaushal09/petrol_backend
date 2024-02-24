@@ -74,8 +74,8 @@ async function getSchedule(req, res) {
                     const filteredSlots = (scheduleItem.slots || []).filter(slot => {
                         if (slot && scheduleItem.date && slot.time && slot.possibility !== 0) {
                             const fuelTypeValue = fuelType === 'petrol' ? slot.petrol : slot.diesel;
-                            console.log(slot);
-                            console.log(fuelTypeValue);
+                            // console.log(slot);
+                            // console.log(fuelTypeValue);
 
                             if (fuelTypeValue < 2) {
                                 const slotDateTime = new Date(scheduleItem.date);
@@ -91,8 +91,8 @@ async function getSchedule(req, res) {
                                 if (currentDay == slotDay) {
                                     return (currentHours < slotHours);
                                 } else {
-                                    console.log("sloted date: " + slotDay + " Sloted hour: " + slotHours);
-                                    console.log("current date: " + currentDay + " currrent hour: " + currentHours);
+                                    // console.log("sloted date: " + slotDay + " Sloted hour: " + slotHours);
+                                    // console.log("current date: " + currentDay + " currrent hour: " + currentHours);
                                     return true;
                                 }
                             }

@@ -13,6 +13,7 @@ const { adminTokenValidator } = require('../middlewares/adminTokenValidator.js')
 const checkSystemStatusMiddleware = require('../middlewares/checkSystemStatus.js');
 const webhookHandler = require('../webhooks/webhookHandler.js');
 const Logger = require('../logger/logger');
+const { getaddressbyIdDao } = require('../Dao/user.dao.js');
 const log = new Logger('Order_Controller');
 
 const orderRouter = express.Router();
@@ -22,7 +23,7 @@ orderRouter.get('/getOrders/', authTokenValidator, checkSystemStatusMiddleware, 
 orderRouter.post('/addOrder/onlinePayment', authTokenValidator, checkSystemStatusMiddleware, paymentBeforeOrderController);//working checked
 orderRouter.post('/addOrder/cod', authTokenValidator, checkSystemStatusMiddleware, addOrderController);//working checked
 // // getBy Id
-// // orderRouter.get('/getOrderById/:_adrId', getByIdController)
+// orderRouter.get('/getOrderById/:_adrId', getByIdController)
 
 // webhook after payment done
 orderRouter.post('/webhook', (request, response) => {
@@ -42,6 +43,8 @@ orderRouter.post('/webhook', (request, response) => {
 // orderRouter.post('/updateOrderDetails', adminTokenValidator, updateOrderDetailsController)//working checked
 
 // // driver
+
+orderRouter.post('/getaddressdetails', driverTokenValidator, checkSystemStatusMiddleware, getByIdController)//working checked
 orderRouter.post('/updateOrderStatus', driverTokenValidator, checkSystemStatusMiddleware, updateOrderStatusController)//working checked
 
 

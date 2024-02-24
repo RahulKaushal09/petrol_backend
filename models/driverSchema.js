@@ -18,8 +18,7 @@ const getOrdersSchemaModel = {
 }
 
 const updateDriverSchemaModel = {
-    phoneNo: Joi.string(),
-    _orderId: Joi.string()
+    _orderId: Joi.string().max(50)
 }
 
 const adminLoginSchemaModel = {
@@ -27,7 +26,7 @@ const adminLoginSchemaModel = {
     password: Joi.string().required().max(50)
 }
 const SystemWorking = {
-    status: Joi.string().required().max(50),
+    status: Joi.boolean().required(),
 }
 
 const driverLoginSchemaModel = {
@@ -49,7 +48,7 @@ const mongoDriverSchema = new mongoose.Schema({
     role: String
 });
 const mongoSystemStatus = new mongoose.Schema({
-    status: String
+    status: Boolean
 });
 
 const mongoAdminSchema = new mongoose.Schema({

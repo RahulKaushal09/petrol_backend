@@ -83,7 +83,7 @@ async function updateOrderStatusController(req, res) {
     let { error } = orderValidator.validateUpdateOrderStatusSchema(orderInfo, res);
     if (isNotValidSchema(error, res)) return;
     try {
-        const response = await orderDao.updateOrderStatusDao(orderInfo, res);
+        const response = await orderDao.updateOrderStatusDao(req, res);
         return response;
         // return res.status(200).send({
         // statusCode: 200,
@@ -108,11 +108,11 @@ async function getAllOrdersController(req, res) {
 
 async function getByIdController(req, res) {
     console.log("controller checkpoint");
-    const orderInfo = req.params;
+    const orderInfo = req.body;
     console.log({ orderInfo });
     try {
         console.log(" Dao entering checkpoint");
-        const response = await orderDao.getOrdersByIdDao(orderInfo, res);
+        const response = await orderDao.getaddressByIdDao(req, res);
         return response;
     } catch (error) {
         log.error(`Error in getting orders by the phone no ${orderInfo}` + error)

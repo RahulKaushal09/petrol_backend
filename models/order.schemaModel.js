@@ -17,9 +17,10 @@ const updateOrderSchemaModel = {
 }
 
 const updateOrderStatusSchemaModel = {
-    phoneNo: Joi.string().required().max(10),
     orderID: Joi.string().required().max(50),
-    status: Joi.string().required().max(15)
+    status: Joi.string().required().max(15),
+    fuelAmount: Joi.string().required().max(15),
+    totalAmount: Joi.string().required().max(15)
 }
 
 const addOrderSchemaModel = {
@@ -60,6 +61,7 @@ const mongoOrderSchema = new mongoose.Schema({
         status: String,
         paymentMethod: String,
         paymentIntentId: String,
+        driver: String,
         totalAmount: Number
 
     }],
