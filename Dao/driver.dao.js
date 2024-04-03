@@ -103,7 +103,43 @@ async function driverLoginDao(driverInfo, res) {
             console.log({ response });
             if (err || !response || response == null) {
 
-                flag = true;
+                const result = await DriverModel.findOne({ username: username },
+                    async (err, response) => {
+                        if (err || !response) {
+
+                            log.error(`error in finding the username` + err);
+                            return res.status(400).send({
+                                statusCode: 400,
+                                message: 'Error While Logging!!'
+                            })
+                        }
+                        const isPasswordCorrect = await bcrypt.compare(password, response.password);
+                        if (!isPasswordCorrect) {
+                            log.info(`Incorrect password`);
+                            return res.status(403).send({
+                                statusCode: 403,
+                                message: 'Incorrect password'
+                            })
+                        }
+                        const jwtToken = jwt.sign(
+                            {
+                                "username": username,
+                                "role": "driver"
+                            },
+                            secretKey,
+                            // { expiresIn: "90d" }
+                        );
+                        // console.log(response);
+                        return res.header('x-auth-token', jwtToken).status(200).send({
+                            message: 'Logged In successfully!',
+                            statusCode: 200,
+                            role: "driver",
+                            token: jwtToken,
+                            result: response,
+
+                        })
+                    })
+                return result;
             }
             else {
                 const temp = await bcrypt.compare(password, response.password);
@@ -132,45 +168,9 @@ async function driverLoginDao(driverInfo, res) {
                 }
             }
         })
-    if (flag) {
-        const result = await DriverModel.findOne({ username: username },
-            async (err, response) => {
-                if (err || !response) {
+    // if (flag) {
 
-                    log.error(`error in finding the username` + err);
-                    return res.status(400).send({
-                        statusCode: 400,
-                        message: 'Error While Logging!!'
-                    })
-                }
-                const isPasswordCorrect = await bcrypt.compare(password, response.password);
-                if (!isPasswordCorrect) {
-                    log.info(`Incorrect password`);
-                    return res.status(403).send({
-                        statusCode: 403,
-                        message: 'Incorrect password'
-                    })
-                }
-                const jwtToken = jwt.sign(
-                    {
-                        "username": username,
-                        "role": "driver"
-                    },
-                    secretKey,
-                    // { expiresIn: "90d" }
-                );
-                // console.log(response);
-                return res.header('x-auth-token', jwtToken).status(200).send({
-                    message: 'Logged In successfully!',
-                    statusCode: 200,
-                    role: "driver",
-                    token: jwtToken,
-                    result: response,
-
-                })
-            })
-        return result;
-    }
+    // }
 }
 
 
