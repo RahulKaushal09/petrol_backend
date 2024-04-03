@@ -101,7 +101,7 @@ async function driverLoginDao(driverInfo, res) {
         async (err, response) => {
             console.log("point");
             console.log({ response });
-            if (err || !response) {
+            if (err || !response || response == null) {
 
                 flag = true;
             }
