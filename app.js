@@ -14,10 +14,12 @@ const https = require('https');
 const fs = require('fs');
 
 const options = {
-    key: fs.readFileSync('59942b33d6b6c772.pem', 'utf8'),
-    cert: fs.readFileSync('59942b33d6b6c772.crt', 'utf8'),
-    ca: fs.readFileSync('gd_bundle-g2-g1.crt', 'utf8')
+    key: fs.readFileSync('generated-private-key.txt', 'utf8').toString(),
+    cert: fs.readFileSync('59942b33d6b6c772.crt', 'utf8').toString(),
+    ca: [fs.readFileSync('gd_bundle-g1.crt', 'utf8').toString(),
+    fs.readFileSync('gd_bundle-g2.crt', 'utf8').toString(), fs.readFileSync('gd_bundle-g3.crt', 'utf8').toString()]
 };
+console.log(options);
 
 // console.log(app.get('env'));
 // set env
@@ -68,7 +70,8 @@ const userservicerouter = require('./routes/user.router');
 const orderservicerouter = require('./routes/order.router');
 const coupanservicerouter = require('./routes/coupan.router');
 const driverservicerouter = require('./routes/driver.router')
-const fuelservicerouter = require('./routes/fuel.router')
+const fuelservicerouter = require('./routes/fuel.router');
+const { log } = require('console');
 
 // -----------------> Routes Setup <---------------------------------//
 app.use('/user', userservicerouter);
