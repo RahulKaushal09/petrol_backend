@@ -168,9 +168,7 @@ async function driverLoginDao(driverInfo, res) {
                 }
             }
         })
-    // if (flag) {
 
-    // }
 }
 
 

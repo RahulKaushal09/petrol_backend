@@ -4,12 +4,20 @@ const morgan = require('morgan');
 var cors = require('cors')
 const mongoose = require('mongoose');
 const cron = require('node-cron');
-const stripe = require('stripe')("sk_test_51ObmyHDN57vbqAvmK5bOHIztyaJ2NbK8fQB1Rr0X60bBvBfW77PdbOQZ3FGsj0pJUoinVMkjPrgzPkbD221EAzo900mGlIThIL");
-const endpointSecret = "whsec_017cba7b95a3b8bb1430949eacf56493b9900799f058be9cb9faa8c15eab5edb";
+// const stripe = require('stripe')("sk_test_51ObmyHDN57vbqAvmK5bOHIztyaJ2NbK8fQB1Rr0X60bBvBfW77PdbOQZ3FGsj0pJUoinVMkjPrgzPkbD221EAzo900mGlIThIL");
+// const endpointSecret = "whsec_017cba7b95a3b8bb1430949eacf56493b9900799f058be9cb9faa8c15eab5edb";
 
 const { updatedScheduleDao, createOrUpdateScheduleDao } = require('./Dao/order.dao')
 require('dotenv').config()
 
+const https = require('https');
+const fs = require('fs');
+
+const options = {
+    key: fs.readFileSync('59942b33d6b6c772.pem'),
+    cert: fs.readFileSync('59942b33d6b6c772.crt'),
+    ca: fs.readFileSync('gd_bundle-g2-g1.crt')
+};
 
 // console.log(app.get('env'));
 // set env
@@ -86,7 +94,9 @@ if (environment === 'development') {
 
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+const server = https.createServer(options, app);
+
+server.listen(port, () => {
     console.log(`Application running in ${environment} environment, listening to port ${port}....`);
     try {
         mongoose.connect(dbUrl, { useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false, useUnifiedTopology: true })
