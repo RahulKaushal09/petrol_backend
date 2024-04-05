@@ -19,7 +19,7 @@ const options = {
     ca: [fs.readFileSync('gd_bundle-g1.crt', 'utf8').toString(),
     fs.readFileSync('gd_bundle-g2.crt', 'utf8').toString(), fs.readFileSync('gd_bundle-g3.crt', 'utf8').toString()]
 };
-console.log(options);
+// console.log(options);
 
 // console.log(app.get('env'));
 // set env
