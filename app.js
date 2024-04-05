@@ -14,9 +14,9 @@ const https = require('https');
 const fs = require('fs');
 
 const options = {
-    key: fs.readFileSync('59942b33d6b6c772.pem'),
-    cert: fs.readFileSync('59942b33d6b6c772.crt'),
-    ca: fs.readFileSync('gd_bundle-g2-g1.crt')
+    key: fs.readFileSync('59942b33d6b6c772.pem', 'utf8'),
+    cert: fs.readFileSync('59942b33d6b6c772.crt', 'utf8'),
+    ca: fs.readFileSync('gd_bundle-g2-g1.crt', 'utf8')
 };
 
 // console.log(app.get('env'));
