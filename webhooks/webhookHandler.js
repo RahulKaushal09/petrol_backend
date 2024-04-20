@@ -6,7 +6,7 @@ const { addOrderDao } = require('../Dao/order.dao');
 const Logger = require('../logger/logger');
 const log = new Logger('Order_Controller');
 // const endpointSecret = "whsec_017cba7b95a3b8bb1430949eacf56493b9900799f058be9cb9faa8c15eab5edb";
-const endpointSecret = "we_1P7inADN57vbqAvmIUNt3Uuh";
+const endpointSecret = "whsec_NNSxUIfc5WwaTvq7nYAZvNXHnMnME7eV";
 
 
 let orderDetails;
