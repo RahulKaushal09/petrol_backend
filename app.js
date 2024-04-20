@@ -32,7 +32,7 @@ const whitelist = [
 ];
 
 app.use((req, res, next) => {
-    if (req.path === '/order/webhook') {
+    if (req.path === '/webhook') {
         // express.json({ verify: (req, res, buf) => { req.rawBody = buf } })
         express.raw({ type: 'application/json' })(req, res, next);
     } else {
