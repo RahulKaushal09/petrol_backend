@@ -32,8 +32,9 @@ const whitelist = [
 ];
 
 app.use((req, res, next) => {
-    if (req.path === '/webhook') {
+    if (req.path === '/order/webhook') {
         // Ensure the raw body is used for Stripe webhook verification
+        console.log(req.path);
         express.raw({ type: 'application/json' })(req, res, (err) => {
             if (err) {
                 return next(err);
