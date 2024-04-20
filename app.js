@@ -30,9 +30,10 @@ const dbUrl = process.env.dburl;
 const whitelist = [
     '*'
 ];
+app.use('/order/webhook', express.raw({ type: 'application/json' }));
 
 app.use((req, res, next) => {
-    if (req.path === '/webhook') {
+    if (req.path === '/order/webhook') {
         // Ensure the raw body is used for Stripe webhook verification
         express.raw({ type: 'application/json' })(req, res, (err) => {
             if (err) {
