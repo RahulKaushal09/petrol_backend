@@ -14,7 +14,10 @@ const otpGenerator = require('otp-generator');
 const nodemailer = require('nodemailer');
 const { ScheduleModel } = require('../models/order.schemaModel');
 var transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
     service: 'gmail',
+    port: 465,
+    secure: true,
     auth: {
         user: EMAIL_USER,
         pass: EMAIL_PASS
