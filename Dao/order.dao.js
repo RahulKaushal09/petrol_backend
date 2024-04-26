@@ -419,7 +419,7 @@ async function paymentBeforeOrderDao(req, res) {
                                                     quantity: 1,
                                                 }],
                                                 mode: 'payment',
-                                                success_url: 'http://localhost:8100/success', // Redirect after successful payment
+                                                success_url: 'https://prairiepetrol.app/success.html', // Redirect after successful payment
                                                 cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
                                                 metadata: {
                                                     token: token,
@@ -515,7 +515,7 @@ async function paymentBeforeOrderDao(req, res) {
                                             quantity: 1,
                                         }],
                                         mode: 'payment',
-                                        success_url: 'http://localhost:8100/success', // Redirect after successful payment
+                                        success_url: 'https://prairiepetrol.app/success.html', // Redirect after successful payment
                                         cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
                                         metadata: {
                                             token: token,
@@ -667,7 +667,7 @@ async function paymentBeforeOrderDao(req, res) {
                                                 quantity: 1,
                                             }],
                                             mode: 'payment',
-                                            success_url: 'http://localhost:8100/success', // Redirect after successful payment
+                                            success_url: 'https://prairiepetrol.app/success.html', // Redirect after successful payment
                                             cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
                                             metadata: {
                                                 token: token,
@@ -763,7 +763,7 @@ async function paymentBeforeOrderDao(req, res) {
                                         quantity: 1,
                                     }],
                                     mode: 'payment',
-                                    success_url: 'http://localhost:8100/success', // Redirect after successful payment
+                                    success_url: 'https://prairiepetrol.app/success.html', // Redirect after successful payment
                                     cancel_url: 'http://localhost:8100/cancel',   // Redirect on cancellation
                                     metadata: {
                                         token: token,
