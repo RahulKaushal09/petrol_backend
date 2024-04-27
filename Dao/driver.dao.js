@@ -469,7 +469,7 @@ async function getAllOrderNumberDoa(req, res) {
                     if (parseInt(response[i].order[j].fuelAmount) < 500 && response[i].order[j].status == "pending") {
                         normal += 1;
                     }
-                    if (response[i].order[j].status == "complete") {
+                    if (response[i].order[j].status == "completed") {
                         complete += 1;
                     }
                 }
