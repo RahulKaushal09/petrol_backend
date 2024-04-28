@@ -311,7 +311,7 @@ async function getAllOrdersCompleteDao(req, res) {
                 const orderArrSize = response[i].order.length;
                 for (let j = 0; j < orderArrSize; j++) {
                     // console.log(response[i].order[j].assignedTo, "aabb");
-                    if (response[i].order[j].status == "complete") {
+                    if (response[i].order[j].status == "completed") {
                         array.push(response[i].order[j]);
                     }
                 }

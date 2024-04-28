@@ -4,8 +4,10 @@ const Logger = require('../logger/logger');
 const log = new Logger('User_Controller');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
+// const EMAIL_USER = process.env.EMAIL_USER;
+const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
+const Domain = process.env.Domain;
+// const EMAIL_PASS = process.env.EMAIL_PASS;
 const client = require('twilio')(accountSid, authToken);
 const verifySid = process.env.verifySID;
 const { UserModel, UserEmailModel } = require('../models/user.schemaModel')
@@ -13,16 +15,17 @@ const jwt = require('jsonwebtoken');
 const otpGenerator = require('otp-generator');
 const nodemailer = require('nodemailer');
 const { ScheduleModel } = require('../models/order.schemaModel');
-var transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    service: 'gmail',
-    port: 465,
-    secure: true,
-    auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS
-    }
-});
+const mailgun = require('mailgun-js')({ MAILGUN_API_KEY, Domain });
+// var transporter = nodemailer.createTransport({
+//     host: 'smtp.gmail.com',
+//     service: 'gmail',
+//     port: 465,
+//     secure: true,
+//     auth: {
+//         user: EMAIL_USER,
+//         pass: EMAIL_PASS
+//     }
+// });
 
 // const readline = require("readline");
 
@@ -260,18 +263,22 @@ async function sendEmailOtp(req, res) {
             }
             try {
                 const emailOtp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
-                var mailOptions = {
-                    // from: 'testapp@gmail.com',
+                const data = {
+                    from: 'Prairie Petroleum <mailgun@prairiepetrol.app>',
                     to: email,
                     subject: 'Email Verification OTP',
-                    text: "This is your one time OTP for Email verification: "
-                        + emailOtp
+                    text: "This is your one time OTP for Email verification: " + emailOtp
                 };
+                // var mailOptions = {
+                //     // from: 'testapp@gmail.com',
+                //     to: email,
+                //     subject: 'Email Verification OTP',
+                //     text: "This is your one time OTP for Email verification: "
+                //         + emailOtp
+                // };
                 // console.log({ emailOtp });
                 console.log("checkpoint 11");
-                transporter.sendMail(mailOptions, async (error, info) => {
-
-                    console.log(emailOtp);
+                mailgun.messages().send(data, async (error, info) => {
                     if (error) {
                         console.log(error);
                         return res.status(500).send({
@@ -303,6 +310,40 @@ async function sendEmailOtp(req, res) {
                         });
                     }
                 });
+                // transporter.sendMail(mailOptions, async (error, info) => {
+
+                //     console.log(emailOtp);
+                //     if (error) {
+                //         console.log(error);
+                //         return res.status(500).send({
+                //             statusCode: 500,
+                //             message: 'Error sending OTP!!'
+                //         });
+                //     } else {
+                //         console.log('Email sent: ' + info.response);
+                //         const newEmailVerification = new UserEmailModel({
+                //             email: email,
+                //             emailOtp: emailOtp,
+                //         });
+                //         await newEmailVerification.save((err, response) => {
+                //             if (err || !response) {
+                //                 log.error(`Error in saving otp with email in db ` + err);
+                //                 return res.status(500).send({
+                //                     statusCode: 500,
+                //                     message: 'Something Went Wrong'
+                //                 })
+                //             }
+                //             else {
+                //                 log.info(`otp sent to email succesfully`);
+                //                 return res.status(200).send({
+                //                     statusCode: 200,
+                //                     message: `OTP sent to Email`
+                //                 })
+
+                //             }
+                //         });
+                //     }
+                // });
 
 
             } catch (error) {

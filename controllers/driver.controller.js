@@ -2,7 +2,7 @@ const Logger = require('../logger/logger');
 const log = new Logger('Driver_Controller');
 const driverValidator = require('../models/driver.validatorSchema');
 const driverDao = require('../Dao/driver.dao')
-const nodemailer = require("nodemailer");
+// const nodemailer = require("nodemailer");
 require('dotenv').config();
 // const jwt = require('jsonwebtoken');
 
