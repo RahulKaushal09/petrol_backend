@@ -5,17 +5,17 @@ const log = new Logger('User_Controller');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 // const EMAIL_USER = process.env.EMAIL_USER;
-const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
-const Domain = process.env.Domain;
+const apiKey = process.env.MAILGUN_API_KEY;
+const domain = process.env.Domain;
 // const EMAIL_PASS = process.env.EMAIL_PASS;
 const client = require('twilio')(accountSid, authToken);
 const verifySid = process.env.verifySID;
 const { UserModel, UserEmailModel } = require('../models/user.schemaModel')
 const jwt = require('jsonwebtoken');
 const otpGenerator = require('otp-generator');
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
 const { ScheduleModel } = require('../models/order.schemaModel');
-const mailgun = require('mailgun-js')({ MAILGUN_API_KEY, Domain });
+const mailgun = require('mailgun-js')({ apiKey, domain });
 // var transporter = nodemailer.createTransport({
 //     host: 'smtp.gmail.com',
 //     service: 'gmail',
