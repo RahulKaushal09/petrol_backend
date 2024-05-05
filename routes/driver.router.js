@@ -41,7 +41,7 @@ driverRouter.get('/getOrderComplete/', adminTokenValidator, getAllOrdersComplete
 
 
 
-driverRouter.post('/login', checkSystemStatusMiddleware, driverLoginController);//working
+driverRouter.post('/login', driverLoginController);//working
 driverRouter.get('/getAllorders', driverTokenValidator, checkSystemStatusMiddleware, getAllOrdersController);// working
 // multiple queries for completed order
 // petrol only
