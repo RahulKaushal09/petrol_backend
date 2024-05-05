@@ -431,12 +431,13 @@ async function getordersBulkDao(req, res) {
                         }
                         else {
 
-                            array.push({
-                                ...response[i].order[j],
-                                addressDetails: addressDetails
-                            });
+                            response[i].order[j].addressDetails = addressDetails;
+                            array.push(response[i].order[j]);
+                            // array.push({
+                            //     ...response[i].order[j],
+                            //     addressDetails: addressDetails
+                            // });
                         }
-                        // array.push(response[i].order[j]);
                     }
                 }
             }
