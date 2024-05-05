@@ -424,6 +424,7 @@ async function getordersBulkDao(req, res) {
                     if (parseInt(response[i].order[j].fuelAmount) >= 500) {
                         const addressId = response[i].order[j].addressId;
                         const addressDetails = await getAddressByIdDaoForBulk(addressId);
+                        console.log(addressDetails);
                         if (!addressDetails) {
                             console.error(`No address details found for address ID: ${addressId}`);
                             continue; // Skip this order if address details are not found
@@ -431,7 +432,7 @@ async function getordersBulkDao(req, res) {
                         else {
 
                             array.push({
-                                ...orders[i].order[j],
+                                ...response[i].order[j],
                                 addressDetails: addressDetails
                             });
                         }
