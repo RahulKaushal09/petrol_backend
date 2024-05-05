@@ -430,8 +430,9 @@ async function getordersBulkDao(req, res) {
                             continue; // Skip this order if address details are not found
                         }
                         else {
-
                             response[i].order[j].addressDetails = addressDetails;
+                            console.log("****************");
+                            console.log(response[i].order[j]);
                             array.push(response[i].order[j]);
                             // array.push({
                             //     ...response[i].order[j],
