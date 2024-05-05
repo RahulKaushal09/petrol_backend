@@ -1,9 +1,11 @@
+const { getByIdController } = require('../controllers/user.controller');
 const Logger = require('../logger/logger');
 const log = new Logger('Driver_Dao');
 const { DriverModel, AdminModel, SystemStatusModel } = require('../models/driverSchema');
 const { orderModel } = require('../models/order.schemaModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { getAddressByIdDaoForBulk } = require('./order.dao');
 
 const secretKey = "12345";
 
@@ -405,7 +407,7 @@ async function getordersNormalDao(req, res) {
     return result;
 }
 async function getordersBulkDao(req, res) {
-    const result = await orderModel.find({}, (err, response) => {
+    const result = await orderModel.find({}, async (err, response) => {
         if (err || !response) {
             log.error(`error in the querry of get orders dao` + err);
             return res.status(404).send({
@@ -420,7 +422,20 @@ async function getordersBulkDao(req, res) {
                 for (let j = 0; j < orderArrSize; j++) {
                     // console.log(response[i].order[j].assignedTo, "aabb");
                     if (parseInt(response[i].order[j].fuelAmount) >= 500) {
-                        array.push(response[i].order[j]);
+                        adrressId = response[i].order[j].addressId;
+                        const addressDetails = await getAddressByIdDaoForBulk(addressId);
+                        if (!addressDetails) {
+                            console.error(`No address details found for address ID: ${addressId}`);
+                            continue; // Skip this order if address details are not found
+                        }
+                        else {
+
+                            array.push({
+                                ...orders[i].order[j],
+                                addressDetails: addressDetails
+                            });
+                        }
+                        // array.push(response[i].order[j]);
                     }
                 }
             }

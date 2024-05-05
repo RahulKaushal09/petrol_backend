@@ -100,6 +100,25 @@ async function getAllOrdersDao(req, res) {
 
     })
 }
+async function getAddressByIdDaoForBulk(addressId) {
+    return new Promise((resolve, reject) => {
+        UserModel.findOne({ 'address._id': addressId }, (err, response) => {
+            if (err || !response) {
+                reject(new Error('No Address Found'));
+            } else {
+                let array = [];
+                for (let i = 0; i < response.address.length; i++) {
+                    if (response.address[i]._id == addressId) {
+                        array.push(response.address[i]);
+                        break;
+                    }
+                }
+                console.log(array);
+                resolve(array[0]);
+            }
+        });
+    });
+}
 
 async function getaddressByIdDao(req, res) {
     // const _orderId = orderInfo._orderId;
@@ -2089,5 +2108,6 @@ module.exports = {
     updateOrderStatusDao,
     getaddressByIdDao,
     updatedScheduleDao,
-    createOrUpdateScheduleDao
+    createOrUpdateScheduleDao,
+    getAddressByIdDaoForBulk
 }
