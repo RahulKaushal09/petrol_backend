@@ -433,10 +433,10 @@ async function getordersBulkDao(req, res) {
                             // response[i].order[j].addressId = addressDetails;
                             console.log("****************");
                             // array.push(response[i].order[j]);
-                            let newOrder = {
-                                ...response[i].order[j],
-                                addressDetails: addressDetails
-                            };
+                            let newOrder = response[i].order[j];
+                            newOrder.addressDetails = addressDetails;
+
+
                             array.push(newOrder);
                             console.log(newOrder);
                             // array.push({
