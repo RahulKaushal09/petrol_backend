@@ -111,11 +111,11 @@ const updateAddressSchemaModel = {
 
 const addAddressSchemaModel = {
     address: {
-        name: Joi.string().required().max(50),
-        phoneNo: Joi.string().required().max(10),
+        name: Joi.string().required().max(100),
+        phoneNo: Joi.string().required().max(15),
         myself: Joi.boolean().required(),
         saveas: Joi.string().required().max(50),
-        fulladdr: Joi.string().required().max(100),
+        fulladdr: Joi.string().required().max(300),
         houseNo: Joi.string().required().max(50),
         area: Joi.string().required().max(100),
         landmarks: Joi.string().max(100).allow(''),
