@@ -422,7 +422,7 @@ async function getordersBulkDao(req, res) {
                 for (let j = 0; j < orderArrSize; j++) {
                     // console.log(response[i].order[j].assignedTo, "aabb");
                     if (parseInt(response[i].order[j].fuelAmount) >= 500) {
-                        adrressId = response[i].order[j].addressId;
+                        const adrressId = response[i].order[j].addressId;
                         const addressDetails = await getAddressByIdDaoForBulk(addressId);
                         if (!addressDetails) {
                             console.error(`No address details found for address ID: ${addressId}`);
