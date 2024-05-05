@@ -433,8 +433,24 @@ async function getordersBulkDao(req, res) {
                             // response[i].order[j].addressId = addressDetails;
                             console.log("****************");
                             // array.push(response[i].order[j]);
-                            let newOrder = response[i].order[j];
-                            newOrder.addressDetails = addressDetails;
+                            let newOrder = {
+                                "id": response[i].order[j].id,
+                                "name": response[i].order[j].name,
+                                "fuelType": response[i].order[j].fuelType,
+                                "fuelAmount": response[i].order[j].fuelAmount,
+                                "emergency": response[i].order[j].emergency,
+                                "fullTank": response[i].order[j].fullTank,
+                                "Date": response[i].order[j].Date,
+                                "preferredTiming": response[i].order[j].preferredTiming,
+                                "CoupanId": response[i].order[j].CoupanId,
+                                "addressId": response[i].order[j].addressId,
+                                "status": response[i].order[j].status,
+                                "paymentMethod": response[i].order[j].paymentMethod,
+                                "driver": response[i].order[j].driver,
+                                "paymentIntentId": response[i].order[j].paymentIntentId,
+                                "totalAmount": response[i].order[j].totalAmount,
+                                "addressDetails": addressDetails
+                            }
 
 
                             array.push(newOrder);
