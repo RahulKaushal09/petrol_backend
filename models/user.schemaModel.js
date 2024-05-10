@@ -24,7 +24,6 @@ const registerInputUserSchemaModel = {
 const deleteAddressSchemaModel = {
     // phoneNo: Joi.string(),
     address_id: Joi.string().required().max(100)
-
 }
 
 const mongoEmailOtp = new mongoose.Schema({
@@ -57,6 +56,7 @@ const mongoUserSchema = new mongoose.Schema({
             vnumber: String,
             lat: Number,
             long: Number,
+            status: String
         }
     ]
 });
@@ -105,7 +105,8 @@ const updateAddressSchemaModel = {
         vehicle: Joi.string().required().max(50),
         vnumber: Joi.string().max(4).min(4).required(),
         lat: Joi.string().required().max(100),
-        long: Joi.string().required().max(100)
+        long: Joi.string().required().max(100),
+        status: Joi.string().required().max(50)
     }
 }
 
@@ -122,7 +123,8 @@ const addAddressSchemaModel = {
         vehicle: Joi.string().required().max(50),
         vnumber: Joi.string().max(4).min(4).required(),
         lat: Joi.number().required().min(- 90).max(90).precision(10),
-        long: Joi.number().required().min(- 180).max(180).precision(10)
+        long: Joi.number().required().min(- 180).max(180).precision(10),
+        status: Joi.string().required().max(50)
     }
 }
 

@@ -142,6 +142,7 @@ async function getAddress(phoneNo, res) {
 async function updateAddressDao(req, res) {
     const loginInfo = req.body
     const address = loginInfo.address;
+    address.status = 'active';
     const phoneNo = req.phoneNo;
     const _id = loginInfo._id;
     // const phoneNo = loginInfo.phoneNo;
@@ -177,6 +178,7 @@ async function addAddressDao(req, res) {
         const loginInfo = req.body;
         const phoneNo = req.phoneNo;
         const adr = loginInfo.address;
+        adr.status = 'active';
         const payload = await getAddress(phoneNo, res);
         // const adrArray = payload.address;
         payload.address.push(adr);
@@ -234,8 +236,9 @@ async function deleteAddressDao(req, res) {
         }
         console.log({ userExists });
         let idFound = address_id;
-        const result = await UserModel.updateOne({ phoneNo: phoneNo },
-            { $pull: { address: { _id: idFound } } },
+        const result = await UserModel.updateOne(
+            { phoneNo: phoneNo, "address._id": idFound },
+            { $set: { "address.$.status": "inactive" } },
             (err, response) => {
                 if (err || !response) {
                     log.error(`Error in removing the address` + err);

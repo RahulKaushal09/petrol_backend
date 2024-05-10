@@ -277,8 +277,10 @@ async function getAllOrdersDao(driverInfo, res) {
         for (let i = 0; i < response.length; i++) {
             const orderArrSize = response[i].order.length;
             for (let j = 0; j < orderArrSize; j++) {
-                // console.log(response[i].order[j].assignedTo, "aabb");
-                array.push(response[i].order[j]);
+                if (response[i].order[j].fuelAmount < 500) {
+                    // console.log(response[i].order[j].assignedTo, "aabb");
+                    array.push(response[i].order[j]);
+                }
             }
         }
         array.sort((a, b) => {
