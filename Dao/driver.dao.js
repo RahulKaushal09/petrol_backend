@@ -504,7 +504,7 @@ async function getAllOrderNumberDoa(req, res) {
                 total += orderArrSize
                 for (let j = 0; j < orderArrSize; j++) {
                     // console.log(response[i].order[j].assignedTo, "aabb");
-                    if (parseInt(response[i].order[j].fuelAmount) >= 500) {
+                    if (parseInt(response[i].order[j].fuelAmount) >= 500 && response[i].order[j].status == "pending") {
                         bulk += 1;
                     }
                     if (parseInt(response[i].order[j].fuelAmount) < 500 && response[i].order[j].status == "pending") {
