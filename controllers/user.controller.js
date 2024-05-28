@@ -11,6 +11,7 @@ const domain = process.env.Domain;
 const client = require('twilio')(accountSid, authToken);
 const verifySid = process.env.verifySID;
 const { UserModel, UserEmailModel } = require('../models/user.schemaModel')
+const { orderModel } = require('../models/order.schemaModel');
 const jwt = require('jsonwebtoken');
 const otpGenerator = require('otp-generator');
 // const nodemailer = require('nodemailer');
@@ -51,6 +52,43 @@ const secretKey = "123456789";
 async function existsEmail(req, res, boolFlag) {
 
 
+}
+async function deleteAccount(req, res, boolFlag) {
+    const phoneNo = req.phoneNo;
+    log.info(`Deleting account of phoneNo ${phoneNo}`);
+    try {
+        const response = await UserModel.findOneAndDelete({ phoneNo: phoneNo }, (err, response) => {
+            if (err || !response) {
+                log.error(`Error in deleting account of phoneNo ${phoneNo}`);
+                return res.status(404).send({
+                    message: 'Error in deleting account'
+                })
+            }
+            log.info(`Successfully deleted account of phoneNo ${phoneNo}`);
+            const deleteOrders = orderModel.deleteMany({ phoneNo: phoneNo }, (err, response) => {
+                if (err || !response) {
+                    log.error(`Error in deleting orders of phoneNo ${phoneNo}`);
+                    return res.status(404).send({
+                        message: 'Error in deleting account'
+                    })
+                }
+                log.info(`Successfully deleted orders of phoneNo ${phoneNo}`);
+            });
+
+            return res.status(200).send({
+                message: 'Account deleted successfully'
+            })
+        }
+        );
+
+
+    }
+    catch (error) {
+        log.error(`Error in deleting account of phoneNo ${phoneNo}` + error);
+        return res.status(404).send({
+            message: 'Error in deleting account'
+        })
+    }
 }
 async function getSchedule(req, res) {
     try {
@@ -682,6 +720,20 @@ async function addressDeleteController(req, res) {
         })
     }
 }
+async function accountDeleteController(req, res) {
+
+    try {
+
+        console.log("Deleteing Account Controller");
+        const result = await userDao.deleteAccountDao(req, res);
+        return result;
+    } catch (error) {
+        log.error(`Error in deleting this address` + error);
+        return res.status(500).send({
+            message: 'Error in deleting this address'
+        })
+    }
+}
 
 async function updateUsernameController(req, res) {
     const loginInfo = req.body;
@@ -774,5 +826,7 @@ module.exports = {
     updateNameController,
     getByIdController,
     getSchedule,
-    verifyUpdatePhoneController
+    deleteAccount,
+    verifyUpdatePhoneController,
+    accountDeleteController
 };

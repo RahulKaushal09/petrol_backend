@@ -124,7 +124,7 @@ const addAddressSchemaModel = {
         vnumber: Joi.string().max(4).min(4).required(),
         lat: Joi.number().required().min(- 90).max(90).precision(10),
         long: Joi.number().required().min(- 180).max(180).precision(10),
-        status: Joi.string().required().max(50)
+        status: Joi.string().max(50)
     }
 }
 

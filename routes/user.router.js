@@ -9,12 +9,14 @@ const {
     verifyOtpController,
     updateUsernameController,
     addressDeleteController,
+    accountDeleteController,
     sendEmailOtp,
     verifyEmailOtp,
     updateNameController,
     getByIdController,
     verifyUpdatePhoneController,
-    getSchedule
+    getSchedule,
+    deleteAccount
 } = require('../controllers/user.controller')
 const { authTokenValidator } = require('../middlewares/authTokenValidator');
 const checkSystemStatusMiddleware = require('../middlewares/checkSystemStatus');
@@ -29,11 +31,13 @@ userRouter.post('/verifyUpdatePhone', authTokenValidator, checkSystemStatusMiddl
 userRouter.post('/updateAddress', authTokenValidator, checkSystemStatusMiddleware, updateAddress,);//working
 userRouter.post('/addAddress', authTokenValidator, checkSystemStatusMiddleware, addAdressController,);//working
 userRouter.post('/deleteAddress', authTokenValidator, checkSystemStatusMiddleware, addressDeleteController);//working
+// userRouter.post('/deleteAccount', authTokenValidator, checkSystemStatusMiddleware, accountDeleteController);//working
 userRouter.post('/sendotp', checkSystemStatusMiddleware, sendOtpController);//working
 userRouter.post('/verifyOtp', checkSystemStatusMiddleware, verifyOtpController);//working
 userRouter.post('/userEnterDetails', authTokenValidator, checkSystemStatusMiddleware, sendEmailOtp);//working
 userRouter.post('/emailVerifyOtp', authTokenValidator, checkSystemStatusMiddleware, verifyEmailOtp);//working
 userRouter.post('/getSchedule', authTokenValidator, checkSystemStatusMiddleware, getSchedule);//working
+userRouter.post('/deleteAccount', authTokenValidator, checkSystemStatusMiddleware, deleteAccount);//working
 
 // userRouter.post('/updateusername', authTokenValidator, updateUsernameController,);// working
 userRouter.post('/updatename', authTokenValidator, updateNameController,);// working

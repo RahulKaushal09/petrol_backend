@@ -265,6 +265,45 @@ async function deleteAddressDao(req, res) {
         })
     }
 }
+async function deleteAccountDao(req, res) {
+    try {
+        let phoneNo = req.phoneNo;
+        let userExists = await getAddress(phoneNo);
+        if (userExists == null) {
+            log.info('cannot find any address with this number ' + phoneNo)
+            return res.status(404).send({
+                statusCode: 404,
+                message: 'No User Found! '
+            })
+        }
+        console.log({ userExists });
+        const result = await UserModel.deleteOne({ phoneNo: phoneNo }, (err, response) => {
+            if (err || !response) {
+                log.error(`Error in removing the Acoount` + err);
+                return res.status(404).send({
+                    statusCode: 404,
+                    message: `Error While Deleting`
+                })
+            }
+            log.info(`Successfully deleted the Account for phoneNo ${phoneNo}`);
+            return res.status(200).send({
+                statusCode: 200,
+                message: 'Account Deleted Successfully'
+            })
+        }
+        );
+
+        return result;
+
+
+    } catch (error) {
+        log.error(" error in deleting the address in Dao");
+        res.status(400).send({
+            statusCode: 400,
+            message: 'Something Went Wrong'
+        })
+    }
+}
 
 async function updateUsernameDao(req, res) {
     // console.log({ loginInfo });
@@ -389,5 +428,6 @@ module.exports = {
     updateUsernameDao,
     deleteAddressDao,
     updateUsernameDao,
-    getaddressbyIdDao
+    getaddressbyIdDao,
+    deleteAccountDao
 }
